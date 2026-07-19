@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Understanding useLayoutEffect",
+  category: "React",
+  tags: ["React", "Hooks", "Rendering"],
+  readingTime: "5 min read"
+};
+
+# Understanding useLayoutEffect
+
+`useLayoutEffect` runs after React commits DOM updates but before the browser paints. It is useful when a component must measure layout or synchronously correct visual state before the user sees the frame.
+
+## When to use it
+
+- Measuring an element before positioning a popover, tooltip, or virtualized row.
+- Reading layout and applying a correction in the same frame.
+- Avoiding a visible flicker that would happen with `useEffect`.
+
+## Why it is expensive
+
+Because it blocks paint. Any heavy work inside `useLayoutEffect` delays the browser from showing the next frame.
+
+```tsx
+useLayoutEffect(() => {
+  const rect = elementRef.current?.getBoundingClientRect();
+  setPosition(rect ? calculatePosition(rect) : null);
+}, []);
+```
+
+## Rule of thumb
+
+Use `useEffect` by default. Reach for `useLayoutEffect` only when the user would otherwise see an incorrect layout.

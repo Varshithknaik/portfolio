@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Responsive Pinterest Feed",
+  category: "Frontend Systems",
+  readingTime: "12 min read"
+};
+
+# Responsive Pinterest Feed
+
+An implementation note for a Pinterest-style homepage and masonry feed. This file is the source of truth for the case-study page, so images, diagrams, and longer notes can be added here without editing the route component.
+
+## Question
+
+Design a Pinterest-style image feed with a focus on the masonry layout, responsive behavior, data fetching, loading states, and frontend performance.
+
+## Requirements
+
+- Render variable-height image cards in responsive columns.
+- Load more pins as the user approaches the end of the feed.
+- Keep the layout stable while images load or fail.
+- Support mobile, tablet, desktop, and container resize behavior.
+- Preserve scroll and route state when users open and return from a pin detail page.
+
+## Architecture
+
+- Page shell owns route and navigation boundaries.
+- Feed client owns pagination, measurement, loading, and rendered pins.
+- `/api/pins` returns paginated pin records.
+- The masonry engine turns raw pins into `left`, `top`, `width`, and `height`.
+
+## Diagram Slot
+
+Add diagrams as regular markdown images:
+
+```md
+![Masonry architecture](/case-studies/pinterest/masonry-architecture.png)
+```
+
+Remote images are also supported when the URL uses `https`.
+
+## Masonry Algorithm
+
+```ts
+count = max(1, floor((containerWidth + gap) / (minColumnWidth + gap)))
+columnWidth = (containerWidth - (count - 1) * gap) / count
+shortestColumn = indexOf(min(columnHeights))
+left = shortestColumn * (columnWidth + gap)
+top = columnHeights[shortestColumn]
+columnHeights[shortestColumn] += pin.height + gap
+```
+
+## Data Contract
+
+```ts
+type Pin = {
+  id: number;
+  url: string;
+  alt: string;
+  height: number;
+};
+```
+
+## Performance Notes
+
+- Use `ResizeObserver` to measure the feed container.
+- Use `IntersectionObserver` for sentinel pagination.
+- Preload images before painting them into the positioned list.
+- Keep mutable pagination and image-loaded flags in refs.
+- Add virtualization when DOM size becomes expensive.
+
+## Accessibility Notes
+
+- Every image needs useful `alt` text from the API or content pipeline.
+- Keyboard users should be able to tab through pins in feed order.
+- Loading state should not repeatedly announce noisy updates.
+- Pin detail navigation should preserve scroll position when users return to the feed.
+
+## Tradeoffs
+
+Absolute positioning gives precise layout control but requires manual container height management. CSS columns are simpler but make ordering, measurement, and pagination harder to reason about.

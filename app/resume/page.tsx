@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Download, Mail } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { experience, profile } from "@/lib/site";
 
@@ -28,16 +29,12 @@ const stack = [
 export default function ResumePage() {
   return (
     <main>
-      <section className="site-container py-20 md:py-28">
-        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <p className="section-kicker">Resume</p>
-            <h1 className="section-title">Frontend Engineer for enterprise SaaS systems.</h1>
-            <p className="section-copy">
-              4 years of experience building React, TypeScript, Next.js, micro frontend, and design-system architecture.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
+      <PageHeader
+        kicker="Resume"
+        title="Frontend Engineer for enterprise SaaS systems."
+        copy="4 years of experience building React, TypeScript, Next.js, micro frontend, and design-system architecture."
+        actions={
+          <>
             <Button asChild>
               <a href="/Varshith-K-Resume.pdf" download>
                 Download PDF <Download size={16} />
@@ -48,9 +45,9 @@ export default function ResumePage() {
                 Email <Mail size={16} />
               </Link>
             </Button>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <section className="site-section pt-0">
         <div className="site-container grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">

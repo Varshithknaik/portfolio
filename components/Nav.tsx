@@ -1,18 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { navigation } from '@/lib/site';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 export default function Nav() {
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] backdrop-blur-xl">
@@ -24,15 +29,25 @@ export default function Nav() {
           <span>Varshith K</span>
         </Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-ui px-3 py-2 text-sm text-muted transition hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const active = isActive(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "rounded-ui px-3 py-2 text-sm transition hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]",
+                  active
+                    ? "bg-[var(--color-accent-soft)] text-[var(--color-text)] shadow-[inset_0_0_0_1px_rgba(138,180,255,0.18)]"
+                    : "text-muted",
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
           <Button
@@ -47,7 +62,14 @@ export default function Nav() {
               <span className="h-4 w-4" />
             )}
           </Button>
-          <Button asChild variant="secondary" className="hidden sm:inline-flex">
+          <Button
+            asChild
+            variant="secondary"
+            className={cn(
+              "hidden sm:inline-flex",
+              isActive("/contact") && "border-accent bg-[var(--color-accent-soft)] text-[var(--color-text)]",
+            )}
+          >
             <Link href="/contact">Contact</Link>
           </Button>
           <Button
@@ -64,20 +86,32 @@ export default function Nav() {
       </div>
       {open ? (
         <div className="site-container grid gap-1 border-t border-line py-3 lg:hidden">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="rounded-ui px-3 py-3 text-sm text-muted hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const active = isActive(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "rounded-ui px-3 py-3 text-sm hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]",
+                  active ? "bg-[var(--color-accent-soft)] text-[var(--color-text)]" : "text-muted",
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
           <Link
             href="/contact"
             onClick={() => setOpen(false)}
-            className="rounded-ui px-3 py-3 text-sm text-muted hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
+            aria-current={isActive("/contact") ? "page" : undefined}
+            className={cn(
+              "rounded-ui px-3 py-3 text-sm hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]",
+              isActive("/contact") ? "bg-[var(--color-accent-soft)] text-[var(--color-text)]" : "text-muted",
+            )}
           >
             Contact
           </Link>

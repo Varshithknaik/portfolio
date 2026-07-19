@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Intersection Observer for Infinite Interfaces",
+  category: "Browser",
+  tags: ["Browser", "Scrolling", "UX"],
+  readingTime: "4 min read"
+};
+
+# Intersection Observer for Infinite Interfaces
+
+`IntersectionObserver` lets the browser tell you when an element enters or leaves a viewport or scroll container. It is usually a better fit than listening to every scroll event.
+
+## Feed loading
+
+Place a small sentinel near the end of the feed. When it intersects, request the next page.
+
+```ts
+const observer = new IntersectionObserver(([entry]) => {
+  if (entry.isIntersecting) {
+    loadNextPage();
+  }
+}, { rootMargin: "200px" });
+```
+
+## Useful options
+
+- `root` changes the scroll container.
+- `rootMargin` loads content before it is visible.
+- `threshold` controls how much of the target must be visible.
+
+## Product detail
+
+Infinite loading should respect loading guards, empty states, errors, and end-of-feed state.

@@ -1,17 +1,9 @@
 import {
   Blocks,
-  Braces,
-  CircuitBoard,
-  FileCode2,
   Flag,
-  GitBranch,
   Layers3,
   LockKeyhole,
-  Network,
-  Radar,
-  Rows3,
   ServerCog,
-  Sparkles,
   TimerReset,
 } from "lucide-react";
 
@@ -30,7 +22,6 @@ export const navigation = [
   { href: "/case-studies", label: "Case Studies" },
   { href: "/notes", label: "Notes" },
   { href: "/projects", label: "Projects" },
-  { href: "/playground", label: "Playground" },
   { href: "/resume", label: "Resume" },
 ];
 
@@ -46,7 +37,7 @@ export const designPlan = {
     },
     {
       route: "/case-studies",
-      intent: "Deep dives into enterprise frontend problems with architecture diagrams instead of screenshots.",
+      intent: "Implementation case studies that explain real UI systems, algorithms, tradeoffs, and edge cases.",
     },
     {
       route: "/notes",
@@ -55,10 +46,6 @@ export const designPlan = {
     {
       route: "/projects",
       intent: "Professional and personal systems framed by architecture, tradeoffs, and outcomes.",
-    },
-    {
-      route: "/playground",
-      intent: "Interactive demos that teach rendering, scheduling, caching, scrolling, and federation concepts.",
     },
     {
       route: "/resume",
@@ -72,10 +59,9 @@ export const designPlan = {
   wireframes: [
     "Home: nav / typography hero / architecture signal strip / expandable featured work / notes preview / contact CTA.",
     "Experience: page header / company timeline / expandable decision panels / responsibility matrix.",
-    "Case Studies: index cards / problem-constraint-architecture framework / diagram block / lessons.",
+    "Case Studies: implementation narrative / working model / algorithm steps / code decisions / edge cases / lessons.",
     "Notes: category rail / search input / dense article grid / featured note / related clusters.",
     "Projects: filters / project cards / architecture details / links.",
-    "Playground: demo grid / interactive surface / concept timeline.",
     "Resume: profile header / metrics / timeline / stack / download CTA.",
     "Contact: direct links / availability / concise working style.",
   ],
@@ -183,53 +169,87 @@ export const experience = [
 
 export const caseStudies = [
   {
-    slug: "global-trade-management",
-    title: "Global Trade Management Frontend",
-    category: "Enterprise SaaS",
-    readingTime: "8 min read",
+    slug: "responsive-pinterest-feed",
+    title: "Responsive Pinterest Feed",
+    category: "Frontend Systems",
+    readingTime: "12 min read",
     problem:
-      "Build a configurable frontend for trade compliance teams that need product data, classification workflows, BOM analysis, reporting, and settings in one coherent product.",
-    constraints: [
-      "Multi-tenant behavior with customer-specific workflows.",
-      "RBAC-sensitive actions and audit-friendly user journeys.",
-      "Rapidly evolving modules while API contracts are still forming.",
-      "Large data tables with validation, bulk actions, and operational states.",
+      "Build a production-style Pinterest feed that lays out variable-height cards, adapts to container width, loads more content at the right time, and avoids painting broken or unloaded images.",
+    preview:
+      "A masonry feed built as a layout engine: measurement, shortest-column placement, preloaded rendering, sentinel pagination, and resize recalculation.",
+    implementation: [
+      {
+        title: "Measure the container, not the browser",
+        body:
+          "The layout uses ResizeObserver on the feed container so column count responds to sidebars, panels, and container changes that window resize would miss.",
+      },
+      {
+        title: "Calculate columns from minimum viable width",
+        body:
+          "Column count is derived from available width, minimum column width, and gap. Leftover space is distributed back into each column so the grid uses the full container.",
+      },
+      {
+        title: "Place each pin in the shortest column",
+        body:
+          "A columnHeights array tracks vertical height per column. Each incoming pin is assigned to the shortest column, then that column height is incremented.",
+      },
+      {
+        title: "Preload before painting",
+        body:
+          "Images are loaded into memory before being added to painted pins. This prevents a feed full of empty absolute-positioned boxes and keeps reveal order predictable.",
+      },
+      {
+        title: "Use a sentinel for infinite loading",
+        body:
+          "IntersectionObserver watches a one-pixel sentinel at the bottom of the absolute-positioned container and triggers the next batch with root margin.",
+      },
+      {
+        title: "Recalculate on responsive changes",
+        body:
+          "When column count or width changes, existing pins are re-laid out from scratch so the layout remains coherent after resize.",
+      },
     ],
-    architecture:
-      "A shell-driven feature architecture with shared UI primitives, domain hooks, API adapters, validation schemas, and feature flag gates at workflow boundaries.",
-    decisions: [
-      "Model feature flags around product capabilities instead of component visibility.",
-      "Keep API transformations outside views so table and form components remain durable.",
-      "Use Storybook as a product-state catalog, not just a component gallery.",
+    codeDecisions: [
+      {
+        label: "ResizeObserver",
+        detail:
+          "Chosen over window resize because the feed should react to element-level layout changes, not just viewport changes.",
+      },
+      {
+        label: "useLayoutEffect",
+        detail:
+          "Used for measurement so the browser does not paint a visibly wrong first layout before dimensions are applied.",
+      },
+      {
+        label: "Refs for feed state",
+        detail:
+          "Pagination, loading guards, image-loaded flags, and column heights live in refs to avoid unnecessary render loops while async loading progresses.",
+      },
+      {
+        label: "Absolute positioning",
+        detail:
+          "Each pin receives left, top, width, and height values, giving precise masonry control without relying on CSS columns that break ordering and measurement.",
+      },
+    ],
+    math: [
+      "count = max(1, floor((containerWidth + gap) / (minColumnWidth + gap)))",
+      "columnWidth = (containerWidth - (count - 1) * gap) / count",
+      "left = shortestColumnIndex * (columnWidth + gap)",
+      "top = columnHeights[shortestColumnIndex]",
+    ],
+    edgeCases: [
+      "Container width changes without a viewport resize.",
+      "Images resolve out of order.",
+      "A network batch returns no more pins.",
+      "A resize happens after several pages have already been positioned.",
+      "Skeleton pins should occupy the same coordinate system as real pins.",
+      "Image failures need a fallback path without infinite retry loops.",
     ],
     lessons: [
-      "The frontend can reduce backend churn when contracts are explicit.",
-      "Configurability needs naming discipline as much as abstraction.",
-      "Enterprise UX quality comes from edge states: loading, denied, partial, stale, invalid.",
-    ],
-  },
-  {
-    slug: "module-federation-platform",
-    title: "Module Federation Platform Patterns",
-    category: "Architecture",
-    readingTime: "6 min read",
-    problem:
-      "Enable independently shipped frontend modules while keeping navigation, permissions, dependencies, and user experience consistent.",
-    constraints: [
-      "Shared dependencies must remain predictable.",
-      "Teams need autonomy without breaking global shell behavior.",
-      "Runtime failures need graceful isolation.",
-    ],
-    architecture:
-      "A host shell owns navigation, auth context, shared routes, and design tokens while remote modules expose bounded product capabilities.",
-    decisions: [
-      "Define integration contracts before component contracts.",
-      "Expose coarse feature entries instead of many tiny shared internals.",
-      "Keep shell-owned concerns out of remote implementation details.",
-    ],
-    lessons: [
-      "Federation is an organizational architecture as much as a bundling technique.",
-      "The hardest shared dependency is usually product behavior.",
+      "A mature masonry layout is a scheduling and measurement problem, not just a CSS layout problem.",
+      "Responsive behavior should be tied to the container that owns the UI.",
+      "Preloading and paint order matter when layout uses absolute positioning.",
+      "The cleanest next step is extracting the masonry engine into a hook with a tiny render component.",
     ],
   },
 ];
@@ -327,56 +347,5 @@ export const projects = [
     problems: ["Workflow states", "Operational UX", "Domain events", "RBAC"],
     github: null,
     live: null,
-  },
-];
-
-export const playgroundDemos = [
-  {
-    icon: CircuitBoard,
-    title: "React Rendering Timeline",
-    summary: "Step through render, commit, layout effects, paint, and passive effects.",
-    state: "Interactive",
-  },
-  {
-    icon: GitBranch,
-    title: "Event Loop",
-    summary: "Visualize call stack, microtasks, macrotasks, and rendering opportunities.",
-    state: "Prototype",
-  },
-  {
-    icon: Rows3,
-    title: "Large Table Virtualization",
-    summary: "Compare visible rows, overscan, and scroll budget in a data-heavy grid.",
-    state: "Interactive",
-  },
-  {
-    icon: Network,
-    title: "Module Federation Demo",
-    summary: "Inspect host, remotes, exposed entries, shared dependencies, and fallback states.",
-    state: "Planned",
-  },
-  {
-    icon: Radar,
-    title: "Intersection Observer",
-    summary: "Tune thresholds and root margins for infinite loading and analytics events.",
-    state: "Interactive",
-  },
-  {
-    icon: FileCode2,
-    title: "React Query Cache",
-    summary: "Watch stale, fetching, invalidated, and optimistic states move over time.",
-    state: "Prototype",
-  },
-  {
-    icon: Braces,
-    title: "Suspense Boundaries",
-    summary: "Model nested loading states and reveal order for product screens.",
-    state: "Planned",
-  },
-  {
-    icon: Sparkles,
-    title: "Feature Flag Matrix",
-    summary: "Explore release flags, permission flags, experiment flags, and kill switches.",
-    state: "Interactive",
   },
 ];

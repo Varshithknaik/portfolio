@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Code2, Mail } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { profile } from "@/lib/site";
 
@@ -12,14 +13,11 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <main>
-      <section className="site-container py-20 md:py-28">
-        <div className="max-w-3xl">
-          <p className="section-kicker">Contact</p>
-          <h1 className="section-title">Let’s talk about frontend systems.</h1>
-          <p className="section-copy">
-            Open to frontend engineering roles where product quality, architecture, performance, and platform thinking matter.
-          </p>
-        </div>
+      <PageHeader
+        kicker="Contact"
+        title="Let’s talk about frontend systems."
+        copy="Open to frontend engineering roles where product quality, architecture, performance, and platform thinking matter."
+      >
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           <Button asChild variant="secondary" className="h-24 justify-start px-5">
             <Link href={`mailto:${profile.email}`}>
@@ -37,7 +35,7 @@ export default function ContactPage() {
             </a>
           </Button>
         </div>
-      </section>
+      </PageHeader>
     </main>
   );
 }

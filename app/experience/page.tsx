@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ExperienceTimeline } from "@/components/ExperienceTimeline";
-import { SectionHeader } from "@/components/SectionHeader";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Experience",
@@ -11,13 +11,11 @@ export const metadata: Metadata = {
 export default function ExperiencePage() {
   return (
     <main>
-      <section className="site-container py-20 md:py-28">
-        <SectionHeader
-          kicker="Experience"
-          title="Ownership across products, architecture, and delivery."
-          copy="This is intentionally not a resume dump. Each role opens into responsibilities, architecture, constraints, and lessons learned."
-        />
-      </section>
+      <PageHeader
+        kicker="Experience"
+        title="Ownership across products, architecture, and delivery."
+        copy="This is intentionally not a resume dump. Each role opens into responsibilities, architecture, constraints, and lessons learned."
+      />
       <section className="site-section pt-0">
         <div className="site-container">
           <ExperienceTimeline />

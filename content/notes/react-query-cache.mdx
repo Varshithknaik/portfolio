@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "React Query Cache Mental Model",
+  category: "State Management",
+  tags: ["Caching", "Server State", "React"],
+  readingTime: "8 min read"
+};
+
+# React Query Cache Mental Model
+
+React Query treats remote data as server state. The cache is not only storage; it is a coordination layer for freshness, background refetching, retries, optimistic updates, and invalidation.
+
+## Fresh and stale
+
+Fresh data can be read without refetching. Stale data can still render immediately, but React Query may refresh it in the background.
+
+```ts
+useQuery({
+  queryKey: ["products", filters],
+  queryFn: fetchProducts,
+  staleTime: 30_000,
+});
+```
+
+## Invalidation
+
+Invalidation should match product events. If a user updates a product classification, invalidate the queries whose data is now conceptually stale.
+
+## Optimistic updates
+
+Optimistic updates make the UI feel immediate, but they need rollback behavior when the server rejects the mutation.

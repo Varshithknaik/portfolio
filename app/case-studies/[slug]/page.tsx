@@ -3,75 +3,67 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
   extractMarkdownHeadings,
   SafeMarkdown,
   stripMdxMetadata,
 } from "@/components/SafeMarkdown";
 import { Button } from "@/components/ui/button";
-import { notes } from "@/lib/site";
+import { caseStudies } from "@/lib/site";
 
-type NotePageProps = {
+type CaseStudyPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
 
-async function getNoteMarkdown(slug: string) {
-  const filePath = path.join(process.cwd(), "content", "notes", `${slug}.mdx`);
+async function getCaseStudyMarkdown(slug: string) {
+  const filePath = path.join(process.cwd(), "content", "case-studies", `${slug}.mdx`);
   const source = await readFile(filePath, "utf8");
   return stripMdxMetadata(source);
 }
 
 export function generateStaticParams() {
-  return notes.map((note) => ({ slug: note.slug }));
+  return caseStudies.map((study) => ({ slug: study.slug }));
 }
 
-export async function generateMetadata({ params }: NotePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const note = notes.find((item) => item.slug === slug);
+  const study = caseStudies.find((item) => item.slug === slug);
 
   return {
-    title: note?.title ?? "Engineering Note",
-    description: note?.summary,
+    title: study?.title ?? "Case Study",
+    description: study?.problem,
   };
 }
 
-export default async function NotePage({ params }: NotePageProps) {
+export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
   const { slug } = await params;
-  const note = notes.find((item) => item.slug === slug);
+  const study = caseStudies.find((item) => item.slug === slug);
 
-  if (!note) {
+  if (!study) {
     notFound();
   }
 
-  const markdown = await getNoteMarkdown(slug);
+  const markdown = await getCaseStudyMarkdown(slug);
   const headings = extractMarkdownHeadings(markdown);
-  const related = notes
-    .filter((item) => item.slug !== note.slug && item.category === note.category)
-    .slice(0, 3);
-  const fallbackRelated = notes.filter((item) => item.slug !== note.slug).slice(0, 3);
 
   return (
     <main>
       <article className="site-container py-16 md:py-24">
         <Button asChild variant="ghost" className="mb-10">
-          <Link href="/notes">
-            <ArrowLeft size={16} /> Notes
+          <Link href="/case-studies">
+            <ArrowLeft size={16} /> Case Studies
           </Link>
         </Button>
 
         <div className="grid gap-12 lg:grid-cols-[minmax(0,760px)_280px] lg:items-start lg:justify-between">
           <div>
             <div className="mb-8 flex flex-wrap gap-2">
-              <span className="chip">{note.category}</span>
-              <span className="chip">{note.readingTime}</span>
-              {note.tags.map((tag) => (
-                <span className="chip" key={tag}>
-                  {tag}
-                </span>
-              ))}
+              <span className="chip">{study.category}</span>
+              <span className="chip">{study.readingTime}</span>
+              <span className="chip">Markdown notes</span>
             </div>
 
             <SafeMarkdown source={markdown} />
@@ -93,23 +85,11 @@ export default async function NotePage({ params }: NotePageProps) {
                   </a>
                 ))}
               </nav>
-            </div>
-
-            <div className="mt-4 rounded-ui border border-line bg-panel p-4">
-              <p className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
-                Related
-              </p>
-              <div className="mt-4 grid gap-3">
-                {(related.length ? related : fallbackRelated).map((item) => (
-                  <Link
-                    className="text-sm leading-5 text-muted transition hover:text-[var(--color-text)]"
-                    href={`/notes/${item.slug}`}
-                    key={item.slug}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
+              <Button asChild variant="secondary" className="mt-5 w-full">
+                <Link href={`/case-studies/${study.slug}/demo`}>
+                  Demo <ArrowRight size={16} />
+                </Link>
+              </Button>
             </div>
           </aside>
         </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { SectionHeader } from "@/components/SectionHeader";
+import { PageHeader } from "@/components/PageHeader";
 import { projects } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -12,13 +12,11 @@ export const metadata: Metadata = {
 export default function ProjectsPage() {
   return (
     <main>
-      <section className="site-container py-20 md:py-28">
-        <SectionHeader
-          kicker="Projects"
-          title="Projects framed by systems, tradeoffs, and product behavior."
-          copy="Professional work, personal builds, and architecture studies. Each entry is written for engineering review, not portfolio decoration."
-        />
-      </section>
+      <PageHeader
+        kicker="Projects"
+        title="Projects framed by systems, tradeoffs, and product behavior."
+        copy="Professional work, personal builds, and architecture studies. Each entry is written for engineering review, not portfolio decoration."
+      />
       <section className="site-section pt-0">
         <div className="site-container grid gap-5">
           {projects.map((project) => (

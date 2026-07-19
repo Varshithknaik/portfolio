@@ -1,82 +1,51 @@
 import type { Metadata } from "next";
-import { ArchitectureFlow } from "@/components/ArchitectureFlow";
-import { SectionHeader } from "@/components/SectionHeader";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { MasonrySystemPreview } from "@/components/MasonrySystemPreview";
+import { PageHeader } from "@/components/PageHeader";
 import { caseStudies } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Case Studies",
   description:
-    "Enterprise frontend case studies covering problems, constraints, architecture, decisions, and lessons learned.",
+    "Implementation case studies covering real frontend systems, algorithms, tradeoffs, edge cases, and lessons learned.",
 };
 
 export default function CaseStudiesPage() {
   return (
     <main>
-      <section className="site-container py-20 md:py-28">
-        <SectionHeader
-          kicker="Case Studies"
-          title="Architecture decisions under enterprise constraints."
-          copy="No screenshot gallery. These are product and platform breakdowns: problem, constraints, architecture, decisions, and lessons."
-        />
-      </section>
+      <PageHeader
+        kicker="Case Studies"
+        title="Implementation notes for real frontend systems."
+        copy="Each case study starts as a high-signal preview, then opens into the implementation decisions, code model, edge cases, and lessons."
+      />
 
       <section className="site-section pt-0">
-        <div className="site-container grid gap-6">
-          {caseStudies.map((study, index) => (
-            <article className="surface-card p-6 md:p-8" key={study.slug}>
-              <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="site-container grid gap-5">
+          {caseStudies.map((study) => (
+            <Link
+              className="surface-card group block p-5 transition hover:border-accent md:p-8"
+              href={`/case-studies/${study.slug}`}
+              key={study.slug}
+            >
+              <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
                 <div>
                   <div className="flex flex-wrap gap-2">
                     <span className="chip">{study.category}</span>
                     <span className="chip">{study.readingTime}</span>
                   </div>
-                  <h2 className="mt-5 font-display text-3xl font-semibold leading-tight tracking-normal md:text-5xl">
-                    {study.title}
+                  <h2 className="mt-5 font-display text-4xl font-semibold leading-tight tracking-normal md:text-6xl">
+                    P-interest Feed
                   </h2>
-                  <p className="mt-5 text-base leading-7 text-muted">{study.problem}</p>
+                  <p className="mt-5 text-base leading-7 text-muted">{study.preview}</p>
+                  <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent">
+                    Open implementation
+                    <ArrowRight className="transition group-hover:translate-x-1" size={16} />
+                  </div>
                 </div>
-                {index === 0 ? (
-                  <ArchitectureFlow />
-                ) : (
-                  <div className="grid gap-3 rounded-ui border border-line bg-[var(--color-bg)] p-5">
-                    {["Host Shell", "Remote Modules", "Shared Contracts", "Failure Boundaries"].map(
-                      (item) => (
-                        <div className="rounded-ui border border-line bg-panel p-4 font-mono text-sm text-muted" key={item}>
-                          {item}
-                        </div>
-                      ),
-                    )}
-                  </div>
-                )}
+                <MasonrySystemPreview />
               </div>
-
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {[
-                  ["Constraints", study.constraints],
-                  ["Interesting Decisions", study.decisions],
-                  ["Lessons Learned", study.lessons],
-                ].map(([title, items]) => (
-                  <div className="rounded-ui border border-line bg-[var(--color-bg)] p-5" key={title as string}>
-                    <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
-                      {title as string}
-                    </h3>
-                    <ul className="mt-4 grid gap-3">
-                      {(items as string[]).map((item) => (
-                        <li className="text-sm leading-6 text-muted" key={item}>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 rounded-ui border border-line bg-[var(--color-bg)] p-5">
-                <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
-                  Architecture
-                </h3>
-                <p className="mt-4 text-sm leading-6 text-muted">{study.architecture}</p>
-              </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>

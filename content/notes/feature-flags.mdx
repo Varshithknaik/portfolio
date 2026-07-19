@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Feature Flags as Product Architecture",
+  category: "Architecture",
+  tags: ["Flags", "RBAC", "Release"],
+  readingTime: "6 min read"
+};
+
+# Feature Flags as Product Architecture
+
+Feature flags should describe product capabilities, not random component visibility. A good flag system makes rollout, rollback, tenant configuration, and permission checks easier to reason about.
+
+## Types of flags
+
+- Release flags control staged rollout.
+- Permission flags control who can access a capability.
+- Experiment flags compare product variants.
+- Kill switches disable risky behavior quickly.
+
+## Naming matters
+
+Prefer names that describe the product behavior:
+
+```ts
+const canUseBulkClassification = flags.gtmBulkClassification && permissions.canClassify;
+```
+
+Avoid names that describe implementation details:
+
+```ts
+const showNewButton = flags.newButton;
+```
+
+## Common trap
+
+When flags are scattered across views, the product behavior becomes hard to audit. Keep flag decisions close to workflow boundaries.
