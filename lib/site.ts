@@ -14,7 +14,7 @@ export const profile = {
   location: "Bengaluru, India",
   email: "varshithknaik@gmail.com",
   linkedin: "https://linkedin.com/in/varshith-k-76b644172",
-  github: "https://github.com/varshith",
+  github: "https://github.com/Varshithknaik",
 };
 
 export const navigation = [
@@ -87,28 +87,19 @@ export const featuredWork = [
     title: "Global Trade Management",
     eyebrow: "Enterprise SaaS",
     summary:
-      "Frontend architecture for a multi-module trade compliance platform built from scratch at Avathon.",
+      "A multi-module compliance platform for Product Master, Tariff Classification, Bulk Classification, BOM Management, Reporting, and Settings.",
     details:
-      "Own product-facing frontend architecture, API contract design, feature-flag driven UI, configurable workflows, Storybook components, and module boundaries across Product Master, Classification, BOM, Reports, and Settings.",
-    stack: ["React", "TypeScript", "Module Federation", "Storybook", "RBAC"],
+      "Built scalable, configurable workflows and data-intensive screens with Ag Grid, including bulk operations, complex filtering, validation, business-rule-driven flows, and frontend architecture that can absorb rapid business change.",
+    stack: ["React", "TypeScript", "Ag Grid", "Configurable Workflows", "Enterprise SaaS"],
   },
   {
-    title: "Pinterest Clone",
-    eyebrow: "Product System",
+    title: "VisualSense",
+    eyebrow: "AI-assisted Analytics",
     summary:
-      "A visual discovery product used to demonstrate feed architecture, infinite scroll, and media-first UI decisions.",
+      "An analytics platform that transforms uploaded datasets into interactive dashboards and conversational insights.",
     details:
-      "Focuses on resilient masonry layouts, interaction states, routing, optimistic saves, content filtering, and image delivery constraints.",
-    stack: ["Next.js", "React", "Intersection Observer", "Caching"],
-  },
-  {
-    title: "Distributed Order System",
-    eyebrow: "Architecture Study",
-    summary:
-      "A systems-oriented case study for order workflows, status transitions, and cross-service UI boundaries.",
-    details:
-      "Explores domain event views, contract-driven UI, failure states, operational dashboards, and permission-aware actions.",
-    stack: ["TypeScript", "State Machines", "API Contracts", "Event Views"],
+      "Developed real-time visualizations, optimized frontend responsiveness, and implemented scalable state management for dataset exploration, dashboard interaction, and AI-assisted analysis workflows.",
+    stack: ["React", "TypeScript", "Redux", "Data Visualization", "AI-assisted UX"],
   },
 ];
 
@@ -313,39 +304,24 @@ export const notes = [
 
 export const projects = [
   {
-    title: "Global Trade Management Platform",
-    type: "Professional",
-    overview:
-      "Enterprise SaaS product for trade compliance workflows, product data, classification, BOM, reports, and configuration.",
-    architecture:
-      "Feature modules, API adapters, Storybook primitives, feature flags, RBAC gates, and table-heavy workflow surfaces.",
-    stack: ["React", "TypeScript", "Module Federation", "TailwindCSS", "Storybook"],
-    problems: ["Bulk operations", "Configurable workflows", "Contract design", "Tenant-aware UI"],
-    github: null,
-    live: null,
-  },
-  {
-    title: "Pinterest Clone",
-    type: "Personal",
-    overview:
-      "Visual discovery interface for media grids, content saving, route transitions, and feed loading behavior.",
-    architecture:
-      "Masonry feed, intersection-driven pagination, optimistic save states, and cached image metadata.",
-    stack: ["Next.js", "React", "TypeScript", "Intersection Observer"],
-    problems: ["Infinite scroll", "Masonry layout", "Image loading", "Optimistic UI"],
-    github: profile.github,
-    live: null,
-  },
-  {
+    slug: "distributed-order-system",
     title: "Distributed Order System",
-    type: "Architecture Study",
+    type: "Work in progress",
+    readingTime: "8 min read",
     overview:
-      "Order lifecycle UI exploring status transitions, domain event views, and operational dashboards.",
+      "A low-level systems build for an Order Management System with command services, query projections, inventory coordination, authentication, and real-time collaboration surfaces.",
     architecture:
-      "Contract-first event models, state transition tables, permission-aware actions, and failure-state dashboards.",
-    stack: ["TypeScript", "React", "State Modeling", "API Contracts"],
-    problems: ["Workflow states", "Operational UX", "Domain events", "RBAC"],
-    github: null,
+      "CQRS architecture with REST at the API Gateway, gRPC between services, Kafka as the event bridge, PostgreSQL for write models, MongoDB for denormalized read models, and shared packages for proto and event contracts.",
+    stack: ["Node.js", "TypeScript", "gRPC", "Kafka", "Prisma", "PostgreSQL", "MongoDB", "React"],
+    problems: [
+      "Command/query separation",
+      "Event contracts",
+      "Read model projections",
+      "Inventory reservation",
+      "Kafka replay",
+      "Service boundaries",
+    ],
+    github: "https://github.com/Varshithknaik/distributed-oder-system-re",
     live: null,
   },
 ];

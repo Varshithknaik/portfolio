@@ -36,7 +36,7 @@ export default function ResumePage() {
         actions={
           <>
             <Button asChild>
-              <a href="/Varshith-K-Resume.pdf" download>
+              <a href="/VarshithK.pdf" download>
                 Download PDF <Download size={16} />
               </a>
             </Button>

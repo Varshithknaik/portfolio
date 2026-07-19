@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
 import { featuredWork } from "@/lib/site";
 
 export function ExpandableWork() {
@@ -20,7 +19,7 @@ export function ExpandableWork() {
             onClick={() => setActive(isActive ? -1 : index)}
             type="button"
           >
-            <div className="grid gap-6 p-6 md:grid-cols-[1fr_1.2fr_auto] md:p-8">
+            <div className="grid gap-6 p-6 md:grid-cols-[1fr_1.2fr] md:p-8">
               <div>
                 <p className="section-kicker">{work.eyebrow}</p>
                 <h3 className="mt-3 font-display text-2xl font-semibold leading-tight tracking-normal text-[var(--color-text)]">
@@ -52,9 +51,6 @@ export function ExpandableWork() {
                   ) : null}
                 </AnimatePresence>
               </div>
-              <span className="grid h-10 w-10 place-items-center rounded-ui border border-line text-accent">
-                <ArrowUpRight size={17} />
-              </span>
             </div>
           </button>
         );

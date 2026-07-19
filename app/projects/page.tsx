@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { projects } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Projects",
   description:
-    "Professional, personal, and architecture-study projects framed by overview, architecture, tech stack, interesting problems, and lessons.",
+    "A work-in-progress distributed order system project framed by low-level design, service boundaries, contracts, and event-driven architecture.",
 };
 
 export default function ProjectsPage() {
@@ -14,13 +15,17 @@ export default function ProjectsPage() {
     <main>
       <PageHeader
         kicker="Projects"
-        title="Projects framed by systems, tradeoffs, and product behavior."
-        copy="Professional work, personal builds, and architecture studies. Each entry is written for engineering review, not portfolio decoration."
+        title="A serious systems build in progress."
+        copy="One presentable project, documented through low-level design, service contracts, event flow, persistence choices, and the tradeoffs behind the architecture."
       />
       <section className="site-section pt-0">
         <div className="site-container grid gap-5">
           {projects.map((project) => (
-            <article className="surface-card p-6 md:p-8" key={project.title}>
+            <article
+              className="surface-card p-6 md:p-8"
+              id={project.slug}
+              key={project.title}
+            >
               <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
                 <div>
                   <span className="chip">{project.type}</span>
@@ -29,6 +34,9 @@ export default function ProjectsPage() {
                   </h2>
                   <p className="mt-5 text-base leading-7 text-muted">{project.overview}</p>
                   <div className="mt-6 flex flex-wrap gap-3">
+                    <Link className="button" href={`/projects/${project.slug}`}>
+                      View Project <ArrowRight size={15} />
+                    </Link>
                     {project.github ? (
                       <a className="button button-secondary" href={project.github}>
                         GitHub <ArrowUpRight size={15} />

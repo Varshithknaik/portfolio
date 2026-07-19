@@ -10,7 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     `/case-studies/${study.slug}`,
     `/case-studies/${study.slug}/demo`,
   ]);
-  const projectRoutes = projects.map((project) => `/projects#${project.title.toLowerCase().replaceAll(" ", "-")}`);
+  const projectRoutes = projects.map((project) => `/projects/${project.slug}`);
 
   return [...staticRoutes, ...noteRoutes, ...caseStudyRoutes, ...projectRoutes].map((route) => ({
     url: `${baseUrl}${route}`,

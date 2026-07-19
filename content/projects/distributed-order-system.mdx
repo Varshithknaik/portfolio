@@ -1,8 +1,161 @@
 export const metadata = {
   title: "Distributed Order System",
-  type: "Architecture Study"
+  type: "Work in progress"
 };
 
 # Distributed Order System
 
-A project note for order lifecycle UI, domain event views, permission-aware actions, and operational dashboard states.
+A work-in-progress Order Management System built to practice backend architecture from a frontend engineer's point of view: service boundaries, API contracts, event-driven state, operational failure modes, and eventually consistent product surfaces.
+
+## Goal
+
+The goal is not to build a demo checkout screen. The goal is to understand how an order platform behaves when writes, reads, inventory, auth, projections, and background processing are split across services.
+
+The system is designed around a few core questions:
+
+- How should the browser talk to a distributed backend without knowing every service?
+- How do command services publish reliable domain events?
+- How do read models stay useful when they are eventually consistent?
+- How should inventory reservation behave when an order is cancelled?
+- What happens when Kafka consumers fail, retry, or need replay?
+
+## System Shape
+
+```text
+Browser / Web Client
+  -> API Gateway
+     -> Order Service via gRPC
+     -> Inventory Service via gRPC
+     -> Read Service via HTTP queries
+
+Order Service
+  -> PostgreSQL write model
+  -> Transactional outbox
+  -> Kafka order.events
+
+Inventory Service
+  -> PostgreSQL inventory and reservation model
+  -> Transactional outbox
+  -> Kafka inventory.events
+  -> Consumes order cancellation events
+
+Read Service
+  -> Consumes order.events and inventory.events
+  -> Projects MongoDB read models
+  -> Serves query APIs for the gateway and UI
+```
+
+## Architecture Decisions
+
+### API Gateway as the product boundary
+
+The gateway is the only public backend surface. It handles auth, accepts REST commands from the UI, maps them into gRPC calls, and will proxy read queries from the Read Service.
+
+That keeps frontend-facing APIs stable even if internal service contracts evolve.
+
+### gRPC for internal service contracts
+
+Order and inventory communicate through generated proto contracts instead of ad hoc HTTP payloads. The important part is not that gRPC is faster; the important part is that the contract is explicit and shared.
+
+```text
+CreateOrder
+  -> validates request
+  -> reserves stock through Inventory Service
+  -> creates order and items
+  -> writes outbox event
+```
+
+### Kafka as the state propagation layer
+
+Kafka moves domain events from write services into read projections. Order and inventory services do not directly mutate the Read Service. They publish events and let projection consumers build query-optimized MongoDB documents.
+
+### Transactional outbox for reliable publishing
+
+The write services persist domain changes and outbox records in the same database transaction. A poller later publishes pending outbox events to Kafka.
+
+This avoids the classic dual-write problem where the database commit succeeds but event publishing fails.
+
+### MongoDB read models for query ergonomics
+
+Read-side documents are shaped for product queries, not normalized storage. Order views include status, totals, items, and timeline-style fields. Inventory views include stock status, effective price, and version metadata.
+
+## Current Implementation
+
+The current repo has the core service structure in place:
+
+- API Gateway with auth, command routes, health route, and static web-client serving.
+- Order Service with gRPC server, create order, cancel order, transactional outbox code, Kafka publishing code, and gRPC error mapping.
+- Inventory Service with gRPC server, add inventory, bulk add, update inventory, reserve stock, cancellation restore logic, and inventory event outbox.
+- Read Service models for `OrderView`, `InventoryView`, and processed-event idempotency.
+- Kafka consumers for order and inventory projections.
+- Shared packages for generated proto contracts, event contracts, Kafka helpers, and logging.
+- Docker and local scripts for infrastructure-oriented development.
+
+## Work In Progress
+
+The project is intentionally still active. The most important open work is not UI polish; it is making the runtime architecture coherent.
+
+### Background worker
+
+The services have been moving toward a Cloud Run-friendly shape where API processes only serve requests. Long-running Kafka consumers and outbox pollers should move into a dedicated background worker.
+
+That worker should run:
+
+- Order outbox poller
+- Inventory outbox poller
+- Read Service order consumer
+- Read Service inventory consumer
+- Inventory Service order-event consumer
+
+### Read APIs
+
+The Read Service needs HTTP query APIs over the MongoDB projections:
+
+- `GET /queries/orders/:orderId`
+- `GET /queries/orders`
+- `GET /queries/inventory/products/:sku`
+- `GET /queries/inventory/products`
+- `GET /queries/inventory/products/low-stock`
+
+### Gateway query routing
+
+After the Read Service exposes query APIs, the Gateway should proxy authenticated UI reads to those endpoints. The browser should still only know the gateway.
+
+## Interesting Problems
+
+### Event idempotency
+
+Projection consumers need to tolerate duplicate delivery. The Read Service stores processed event IDs and uses version guards on projections so repeated or stale events do not corrupt the current view.
+
+### Inventory reservation
+
+Creating an order should not trust client-sent prices or stock. The Order Service asks Inventory to reserve stock and return the authoritative product pricing used to calculate the order total.
+
+### Cancellation recovery
+
+Cancelling an order should restore inventory reservations and publish inventory events so the read model reflects available stock again.
+
+### Replay
+
+The system includes notes and scripts for Kafka replay. This matters because event-driven systems need operational recovery paths when a consumer misses, rejects, or incorrectly handles a message.
+
+## Known Risks
+
+- Background processing is not fully wired into a dedicated worker yet.
+- Some declared Inventory Service gRPC methods are still incomplete.
+- Query APIs are still missing, so the frontend cannot yet consume the read model as a product interface.
+- The web client is currently scaffold-level, not a finished OMS UI.
+
+## Next Sessions
+
+1. Build the `background-worker` app and wire all pollers/consumers into local and production scripts.
+2. Fix retry-loop and switch fallthrough bugs in consumers before relying on projections.
+3. Add Read Service HTTP query routes for orders and inventory.
+4. Add API Gateway query proxy routes protected by auth middleware.
+5. Start the web-client product surface with order list, inventory catalog, order detail, and cancellation flows.
+
+## Why This Project Matters
+
+This project is useful because it forces product UI decisions to sit on top of real platform constraints: eventual consistency, replay, service ownership, idempotency, stale events, and contract boundaries.
+
+That is the kind of architecture pressure enterprise frontends live with every day.

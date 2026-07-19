@@ -36,9 +36,9 @@ export default function Home() {
       <MotionSection className="site-section">
         <div className="site-container">
           <SectionHeader
-            kicker="Featured Work"
-            title="Systems, not screenshots."
-            copy="Each card expands into architecture, constraints, and implementation decisions so recruiters can see product ownership."
+            kicker="Key Products"
+            title="Product surfaces shaped by frontend architecture."
+            copy="A focused view of enterprise products where the frontend work includes workflow design, data-heavy interfaces, state architecture, and platform-level decisions."
           />
           <div className="mt-12">
             <ExpandableWork />
