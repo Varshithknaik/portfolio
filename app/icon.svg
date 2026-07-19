@@ -1,0 +1,10 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="256" height="256" rx="56" fill="#0A0D12"/>
+  
+  <!-- Outer glowing V shape (Accent Color) -->
+  <path d="M72 64L128 176L184 64" stroke="#8AB4FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Inner overlapping accent (Strong Accent) -->
+  <path d="M128 176L184 64H156L128 120L100 64H72L128 176Z" fill="#5F92F4"/>
+</svg>
