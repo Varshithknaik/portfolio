@@ -1,90 +1,97 @@
-import { Metadata } from "next";
-import { profile, hero, about, experience, projects, stack, education } from "@/data/content";
-import { Download } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Download, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { experience, profile } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Resume | Varshith K",
-  description: "Varshith K's Professional Resume.",
+  title: "Resume",
+  description: "Frontend engineering resume for enterprise SaaS, React, TypeScript, and frontend architecture.",
 };
+
+const stack = [
+  "React",
+  "TypeScript",
+  "Next.js",
+  "TailwindCSS",
+  "Micro Frontends",
+  "Webpack Module Federation",
+  "Design Systems",
+  "Storybook",
+  "API Contract Design",
+  "Feature Flags",
+  "RBAC",
+  "Multi Tenant Applications",
+  "Performance Optimization",
+];
 
 export default function ResumePage() {
   return (
-    <div className="wrap" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
-        <div>
-          <h1 style={{ marginBottom: '8px', fontSize: '42px' }}>{profile.name}</h1>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--text-muted)' }}>
-            <span>{profile.phone}</span> | <span>{profile.email}</span> | <a href={profile.linkedin} target="_blank" rel="noreferrer">linkedin.com/in/varshith-k-76b644172</a>
+    <main>
+      <section className="site-container py-20 md:py-28">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="section-kicker">Resume</p>
+            <h1 className="section-title">Frontend Engineer for enterprise SaaS systems.</h1>
+            <p className="section-copy">
+              4 years of experience building React, TypeScript, Next.js, micro frontend, and design-system architecture.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <a href="/Varshith-K-Resume.pdf" download>
+                Download PDF <Download size={16} />
+              </a>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href={`mailto:${profile.email}`}>
+                Email <Mail size={16} />
+              </Link>
+            </Button>
           </div>
         </div>
-        <a href="/varshith_k_resume.pdf" download className="navcta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Download size={16} />
-          Download PDF
-        </a>
-      </div>
-
-      <section style={{ padding: '0', borderBottom: 'none', marginBottom: '48px' }}>
-        <h2 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>Professional Summary</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '15px' }}>{hero.lede}</p>
-        {about.paragraphs.map((p, i) => (
-          <p key={i} style={{ color: 'var(--text-muted)', fontSize: '15px', marginTop: '12px' }}>{p}</p>
-        ))}
       </section>
 
-      <section style={{ padding: '0', borderBottom: 'none', marginBottom: '48px' }}>
-        <h2 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '24px', fontFamily: 'var(--font-display)' }}>Professional Experience</h2>
-        {experience.map((job) => (
-          <div key={job.company} style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 600 }}>{job.company} | <span style={{ fontWeight: 400 }}>{job.role}</span></h3>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-dim)' }}>{job.dates}, {job.location}</span>
+      <section className="site-section pt-0">
+        <div className="site-container grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <aside className="surface-card h-fit p-6">
+            <h2 className="font-display text-2xl font-semibold tracking-normal">Core Stack</h2>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {stack.map((item) => (
+                <span className="chip" key={item}>
+                  {item}
+                </span>
+              ))}
             </div>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '14px' }}>
-              {job.bullets.map((b, i) => (
-                <li key={i} style={{ marginBottom: '8px' }}>{b}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </section>
+          </aside>
 
-      <section style={{ padding: '0', borderBottom: 'none', marginBottom: '48px' }}>
-        <h2 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '24px', fontFamily: 'var(--font-display)' }}>Key Products</h2>
-        {projects.map((p) => (
-          <div key={p.title} style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>{p.title} | <span style={{ fontWeight: 400 }}>{p.stack.join(', ')}</span></h3>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '14px' }}>
-              {p.bullets?.map((b, i) => (
-                <li key={i} style={{ marginBottom: '8px' }}>{b}</li>
-              ))}
-            </ul>
+          <div className="grid gap-4">
+            {experience.map((job) => (
+              <article className="surface-card p-6" key={job.company}>
+                <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+                  <div>
+                    <p className="font-mono text-xs text-subtle">{job.period}</p>
+                    <h2 className="mt-2 font-display text-xl font-semibold tracking-normal">
+                      {job.company}
+                    </h2>
+                  </div>
+                  <div>
+                    <p className="font-semibold">{job.role}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted">{job.scope}</p>
+                    <ul className="mt-5 grid gap-3">
+                      {job.responsibilities.slice(0, 3).map((item) => (
+                        <li className="text-sm leading-6 text-muted" key={item}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
-        ))}
-      </section>
-
-      <section style={{ padding: '0', borderBottom: 'none', marginBottom: '48px' }}>
-        <h2 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>Skills</h2>
-        <div style={{ color: 'var(--text-muted)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div><strong style={{ color: 'var(--text-main)' }}>Languages:</strong> {stack.languages.join(', ')}</div>
-          <div><strong style={{ color: 'var(--text-main)' }}>Frontend:</strong> {stack.frontend.join(', ')}</div>
-          <div><strong style={{ color: 'var(--text-main)' }}>Architecture:</strong> {stack.architecture.join(', ')}</div>
-          <div><strong style={{ color: 'var(--text-main)' }}>Backend:</strong> {stack.backend.join(', ')}</div>
-          <div><strong style={{ color: 'var(--text-main)' }}>Tools:</strong> {stack.tooling.join(', ')}</div>
         </div>
       </section>
-
-      <section style={{ padding: '0', borderBottom: 'none', marginBottom: '48px' }}>
-        <h2 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>Education</h2>
-        {education.map((edu) => (
-          <div key={edu.degree} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600 }}>{edu.institution}</h3>
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{edu.degree}</div>
-            </div>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-dim)' }}>{edu.dates}</span>
-          </div>
-        ))}
-      </section>
-    </div>
+    </main>
   );
 }

@@ -1,0 +1,21 @@
+export const metadata = {
+  title: "Browser Rendering Pipeline",
+  category: "Browser",
+  tags: ["Rendering", "Performance", "Layout"],
+  readingTime: "7 min read"
+};
+
+# Browser Rendering Pipeline
+
+Parsing, style calculation, layout, paint, and compositing define the real performance budget of product UI.
+
+> Use this note shape for code, diagrams, callouts, videos, and playground embeds.
+
+```ts
+type FrameBudget = {
+  script: number;
+  style: number;
+  layout: number;
+  paint: number;
+};
+```

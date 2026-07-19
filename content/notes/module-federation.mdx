@@ -1,0 +1,17 @@
+export const metadata = {
+  title: "Module Federation in Enterprise Frontends",
+  category: "Webpack",
+  tags: ["Webpack", "Architecture", "Micro Frontends"],
+  readingTime: "9 min read"
+};
+
+# Module Federation in Enterprise Frontends
+
+Runtime composition works when the shell, remote modules, shared dependencies, and failure boundaries have explicit contracts.
+
+```ts
+type RemoteContract = {
+  mount: (context: ShellContext) => void;
+  routes: ProductRoute[];
+};
+```
