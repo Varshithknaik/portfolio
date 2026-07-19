@@ -25,12 +25,12 @@ export default function ContactPage() {
             </Link>
           </Button>
           <Button asChild variant="secondary" className="h-24 justify-start px-5">
-            <a href={profile.linkedin}>
+            <a href={profile.linkedin} target="_blank" rel="noreferrer">
               <ArrowUpRight size={18} /> LinkedIn
             </a>
           </Button>
           <Button asChild variant="secondary" className="h-24 justify-start px-5">
-            <a href={profile.github}>
+            <a href={profile.github} target="_blank" rel="noreferrer">
               <Code2 size={18} /> GitHub
             </a>
           </Button>

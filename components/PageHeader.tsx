@@ -27,7 +27,7 @@ export function PageHeader({
   copyClassName,
 }: PageHeaderProps) {
   return (
-    <section className={cn("site-container py-20 md:py-28", className)}>
+    <section className={cn("site-container py-7.5 md:py-10", className)}>
       <div
         className={cn(
           actions && "grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end",
