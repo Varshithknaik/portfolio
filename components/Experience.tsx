@@ -5,7 +5,6 @@ export default function Experience() {
     <section id="experience">
       <div className="wrap">
         <div className="sec-head">
-          <span className="sec-num">02</span>
           <span className="sec-title">Experience</span>
         </div>
 

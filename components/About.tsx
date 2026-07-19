@@ -5,7 +5,6 @@ export default function About() {
     <section id="about">
       <div className="wrap">
         <div className="sec-head">
-          <span className="sec-num">01</span>
           <span className="sec-title">About</span>
         </div>
         <div className="about-grid">

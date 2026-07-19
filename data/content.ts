@@ -4,46 +4,43 @@
 export const profile = {
   name: "Varshith K",
   role: "Frontend Engineer",
-  focus: "Micro-Frontend Architecture",
+  focus: "Enterprise SaaS & Micro-Frontends",
   email: "varshithknaik@gmail.com",
+  phone: "+91-9880798144",
   location: "Bengaluru, India",
-  github: "https://github.com/varshith", // TODO: confirm this is your real GitHub URL
-  linkedin: "https://linkedin.com/in/varshith", // TODO: confirm this is your real LinkedIn URL
+  linkedin: "https://linkedin.com/in/varshith-k-76b644172",
+  github: "https://github.com/varshith", // Placeholder if unknown
 };
 
 export const hero = {
   eyebrow: "FRONTEND ENGINEER · MICRO-FRONTEND ARCHITECTURE",
-  headline: ["Ships frontend systems", "that scale ", "solo", "."],
-  lede: "I'm Varshith — sole frontend engineer on an enterprise Global Trade Management platform, building the micro-frontend shell it runs on and the modules that plug into it.",
+  headline: ["Building scalable", "frontend systems", "for enterprise", "."],
+  lede: "Frontend Engineer with 4 years of experience building Enterprise SaaS applications using React, TypeScript, and Next.js. I specialize in designing scalable user interfaces and configurable architectures for multi-tenant platforms.",
 };
 
-// The shell diagram in the hero — kept separate so it's easy to relabel
-// if your actual module set changes.
 export const shellModules = [
-  { name: "Tariff engine", tag: "HS/HTS classification" },
-  { name: "Denied party screen", tag: "compliance checks" },
-  { name: "ECCN classifier", tag: "export control" },
-  { name: "Chatbot workflows", tag: "assisted review" },
+  { name: "Product Master", tag: "Core Data" },
+  { name: "Tariff Classification", tag: "AI-assisted" },
+  { name: "ECCN Classification", tag: "Compliance" },
+  { name: "BOM & Reports", tag: "Analytics" },
 ];
 
 export const stats = [
-  { num: "4+", label: "years in production React" },
-  { num: "1", label: "sole FE owner on GTM" },
-  { num: "4", label: "live modules shipped" },
-  { num: "15%", label: "retention lift at PwC" },
+  { num: "4", label: "years in frontend engineering" },
+  { num: "Enterprise", label: "SaaS platforms built" },
+  { num: "Micro", label: "frontend architecture" },
+  { num: "React", label: "Next.js & TypeScript" },
 ];
 
 export const about = {
   paragraphs: [
-    "I build the frontend layer of enterprise trade-compliance software — the part analysts touch every day to classify tariffs, screen denied parties, and clear export controls. That means owning architecture decisions, not just implementing tickets.",
-    "At Avathon, I designed the micro-frontend container the whole product runs on, so every module can ship independently. I lead API contract discussions with backend, and I don't stay in my lane when a backend bug is blocking a release.",
-    "Before this, I spent two and a half years at PwC India shipping client-facing interfaces and squeezing UI performance with Web Workers.",
+    "I am a Frontend Engineer experienced in owning end-to-end frontend development, defining API contracts, and building configurable, reusable architectures for multi-tenant platforms.",
+    "I am passionate about creating maintainable frontend systems through Micro-Frontend architecture, Design Systems, and feature-based engineering while collaborating closely with Product, Design, and Backend teams.",
   ],
   focusList: [
-    { k: "Architecture", v: "module federation" },
-    { k: "Ownership", v: "design → prod, solo" },
-    { k: "Collaboration", v: "design + PM + backend" },
-    { k: "Base", v: "bengaluru, india" },
+    { k: "Architecture", v: "Micro Frontends, Design Systems" },
+    { k: "Core Stack", v: "React, Next.js, TypeScript" },
+    { k: "Location", v: "Bengaluru, India" },
   ],
 };
 
@@ -56,32 +53,35 @@ export type Job = {
   tags: string[];
 };
 
-// Note: GTM is listed here as work experience, not in the Projects section —
-// it's company IP, so we describe your role/impact rather than showcasing it
-// as a demo-able project.
 export const experience: Job[] = [
   {
-    dates: "Jan 2025 — Present",
+    dates: "Jan 2025 – Present",
     company: "Avathon",
-    location: "Bengaluru, Karnataka",
-    role: "Frontend Engineer",
+    location: "Bengaluru, India",
+    role: "Frontend Developer",
     bullets: [
-      "Sole frontend engineer on Global Trade Management — own tariff classification, denied party screening, and ECCN classification end to end.",
-      "Architected the micro-frontend container app enabling independent module deployment and multi-tenant, hierarchy-based data visibility.",
-      "Lead strict API contract enforcement with backend, and built the in-house component/theming system the team builds on.",
+      "Own the end-to-end frontend development of the Global Trade Management (GTM) platform, building the product from the ground up and leading implementation across Product Master, Tariff Classification, Bulk Classification, BOM, Reports, and Settings modules.",
+      "Design scalable trade compliance workflows while driving new capabilities including AI-assisted Product Classification and ECCN Classification.",
+      "Partner with Product Managers, UX Designers, and Backend Engineers to define frontend architecture, design API contracts, and deliver configurable solutions for evolving business requirements.",
+      "Contribute to the organization's Micro-Frontend platform using Webpack Module Federation, defining scalable module integration patterns and shared application architecture.",
+      "Architect and maintain a feature-based frontend architecture using custom hooks, API abstraction layers, validation schemas, shared utilities, and centralized state management.",
+      "Build configuration-drive and feature-flag-based workflows that enable customer-specific customization, backward compatibility, and rapid feature delivery with minimal code changes.",
+      "Maintain and extend the Storybook-based Design System, review shared UI component pull requests, and collaborate on frontend engineering standards and production issue resolution across React and Node.js services.",
     ],
-    tags: ["React 18", "TypeScript", "Module Federation", "Tailwind"],
+    tags: ["React 18", "TypeScript", "Module Federation", "Webpack", "Storybook"],
   },
   {
-    dates: "Jul 2022 — Dec 2024",
+    dates: "Jul 2022 – Dec 2024",
     company: "PwC India",
-    location: "Bengaluru, Karnataka",
-    role: "Frontend Engineer",
+    location: "Bengaluru, India",
+    role: "Frontend Developer",
     bullets: [
-      "Delivered responsive, accessible client-facing interfaces, improving user retention by 15%.",
-      "Offloaded compute-heavy work to Web Workers, cutting UI delays by 30%.",
+      "Developed enterprise web applications using React, Next.js, and Tailwind CSS for client-facing digital solutions.",
+      "Built reusable UI components and frontend utilities that improved consistency and accelerated feature development across applications.",
+      "Improved application performance using Web Workers, lazy loading, memoization, and optimized React rendering strategies.",
+      "Collaborated with cross-functional teams throughout design, implementation, testing, deployment, and participated in code reviews and frontend architecture discussions.",
     ],
-    tags: ["React", "Next.js", "Tailwind CSS"],
+    tags: ["React", "Next.js", "Tailwind CSS", "Web Workers"],
   },
 ];
 
@@ -90,47 +90,52 @@ export type Project = {
   title: string;
   description: string;
   stack: string[];
-  status: "Live" | "In progress" | "Source available";
-  link?: string; // TODO: add real links once available
+  status: "Live" | "In progress" | "Source available" | "Enterprise Product";
+  link?: string;
+  bullets?: string[];
 };
 
-// TODO: this is placeholder content for your non-deployed GitHub projects
-// and the Pinterest-style feed page — swap in real names, descriptions,
-// stacks, and repo/demo links.
 export const projects: Project[] = [
   {
-    tag: "VISUAL SENSE",
-    title: "GenAI dashboard platform",
-    description:
-      "End-to-end MERN platform turning uploaded datasets into GenAI-driven interactive dashboards, with a real-time chatbot for dataset queries.",
-    stack: ["MongoDB", "Redux", "Redis", "GenAI"],
-    status: "Source available",
+    tag: "SAAS PLATFORM",
+    title: "Global Trade Management Platform",
+    description: "Enterprise SaaS platform supporting Product Master, Tariff Classification, Bulk Classification, BOM Management, Reporting, and Settings through scalable, configurable workflows.",
+    stack: ["React", "TypeScript", "Module Federation", "Tailwind CSS", "Ag-Grid"],
+    status: "Enterprise Product",
+    bullets: [
+      "Built an Enterprise SaaS platform supporting Product Master, Tariff Classification, Bulk Classification, BOM Management, Reporting, and Settings through scalable, configurable workflows.",
+      "Developed data-intensive interfaces using Ag Grid, implementing bulk operations, complex filtering, validation, and business-rule-driven workflows.",
+      "Designed frontend architecture to support rapid business changes, configurable workflows, and AI-assisted compliance experiences."
+    ]
   },
   {
-    tag: "PERSONAL PROJECT",
-    title: "Masonry feed UI", // TODO: rename to your actual project name
-    description:
-      "A Pinterest-style masonry feed — virtualized grid, infinite scroll, and responsive image loading. TODO: replace with your real description once the pages are further along.",
-    stack: ["React", "Next.js", "Tailwind CSS"],
-    status: "In progress",
-  },
-  {
-    tag: "GITHUB",
-    title: "Open-source experiments", // TODO: rename or split into individual cards per repo
-    description:
-      "A handful of smaller repos exploring component patterns, tooling, and UI experiments outside of work. TODO: list specific repos here with one-line descriptions.",
-    stack: ["TypeScript", "React"],
-    status: "Source available",
-    link: "https://github.com/varshith", // TODO: confirm/replace
-  },
+    tag: "ANALYTICS PLATFORM",
+    title: "Omnichannel Platform",
+    description: "AI-assisted analytics platform that transformed uploaded datasets into interactive dashboards and conversational insights.",
+    stack: ["ReactJS", "Redux", "TypeScript"],
+    status: "Enterprise Product",
+    bullets: [
+      "Developed an AI-assisted analytics platform that transformed uploaded datasets into interactive dashboards and conversational insights.",
+      "Built real-time visualizations, optimized frontend responsiveness, and implemented scalable state management using Redux."
+    ]
+  }
 ];
 
 export const stack = {
-  languages: ["TypeScript", "JavaScript", "Python"],
-  frontend: ["React", "Next.js", "Redux", "Module Federation", "Tailwind"],
-  backend: ["Node.js", "Express", "MongoDB", "PostgreSQL"],
-  tooling: ["Docker", "Git", "Redis", "Ag-Grid"],
+  languages: ["TypeScript", "JavaScript (ES6+)", "Python"],
+  frontend: ["React 18", "Next.js", "Redux Toolkit", "React Query", "Tailwind CSS", "Ag Grid", "Webpack", "Module Federation", "Vite"],
+  architecture: ["Micro Frontends", "Design Systems", "Component Libraries", "REST APIs", "Feature-Based Architecture", "Multi-Tenant Applications"],
+  backend: ["Node.js", "Express.js", "MongoDB", "PostgreSQL", "Redis"],
+  tooling: ["Docker", "Git", "Storybook", "Jest", "Playwright", "Postman", "GitHub Actions"],
 };
+
+export const education = [
+  {
+    institution: "National Institute of Technology Karnataka (NITK), Surathkal",
+    degree: "Bachelor's in Electrical and Electronics Engineering",
+    dates: "Jul 2018 – Apr 2022"
+  }
+];
 
 export const contact = {
   heading: "Let's build something.",

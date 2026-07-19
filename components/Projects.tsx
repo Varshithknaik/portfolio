@@ -5,7 +5,6 @@ export default function Projects() {
     <section id="projects">
       <div className="wrap">
         <div className="sec-head">
-          <span className="sec-num">03</span>
           <span className="sec-title">Projects</span>
         </div>
         <div className="proj-grid">

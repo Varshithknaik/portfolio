@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import Nav from "@/components/Nav";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -35,11 +37,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       >
-        {children}
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Nav />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

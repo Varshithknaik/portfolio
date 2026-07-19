@@ -31,7 +31,6 @@ export default function Stack() {
     <section id="stack">
       <div className="wrap">
         <div className="sec-head">
-          <span className="sec-num">04</span>
           <span className="sec-title">Stack</span>
         </div>
         <div className="manifest">
