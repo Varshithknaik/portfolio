@@ -3,13 +3,13 @@ export type Pin = {
   alt: string
   height: number
   url: string
+  isSkeleton?: boolean
 }
 
 export type LayoutPin = Pin & {
   left: number
   top: number
   width: number
-  isSkeleton?: boolean
 }
 
 type ContainerMetrics = {

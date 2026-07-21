@@ -1,42 +1,46 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { PinterestMasonryDemo } from "@/components/features/masonry/PinterestMasonryDemo";
-import { Button } from "@/components/ui/button";
-import { caseStudies } from "@/lib/site";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { PinterestMasonryDemo } from '@/components/features/masonry/PinterestMasonryDemo'
+import { Button } from '@/components/ui/button'
+import { caseStudies } from '@/lib/site'
 
 type CaseStudyDemoPageProps = {
   params: Promise<{
-    slug: string;
-  }>;
-};
+    slug: string
+  }>
+}
 
 export function generateStaticParams() {
-  return caseStudies.map((study) => ({ slug: study.slug }));
+  return caseStudies.map((study) => ({ slug: study.slug }))
 }
 
-export async function generateMetadata({ params }: CaseStudyDemoPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const study = caseStudies.find((item) => item.slug === slug);
+export async function generateMetadata({
+  params,
+}: CaseStudyDemoPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const study = caseStudies.find((item) => item.slug === slug)
 
   return {
-    title: study ? `${study.title} Demo` : "Case Study Demo",
+    title: study ? `${study.title} Demo` : 'Case Study Demo',
     description: study?.problem,
-  };
+  }
 }
 
-export default async function CaseStudyDemoPage({ params }: CaseStudyDemoPageProps) {
-  const { slug } = await params;
-  const study = caseStudies.find((item) => item.slug === slug);
+export default async function CaseStudyDemoPage({
+  params,
+}: CaseStudyDemoPageProps) {
+  const { slug } = await params
+  const study = caseStudies.find((item) => item.slug === slug)
 
   if (!study) {
-    notFound();
+    notFound()
   }
 
   return (
     <main>
-      <section className="mx-auto w-[min(1600px,calc(100vw-28px))] py-6 md:py-8">
+      <section className="mx-auto w-[90vw] py-6 md:py-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-5">
           <div>
             <Button asChild variant="ghost" className="mb-5">
@@ -53,12 +57,14 @@ export default async function CaseStudyDemoPage({ params }: CaseStudyDemoPagePro
             </h1>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted">
-            API-backed masonry feed with ResizeObserver layout, image preloading, shortest-column placement, skeletons, and IntersectionObserver pagination.
+            API-backed masonry feed with ResizeObserver layout, image
+            preloading, shortest-column placement, skeletons, and
+            IntersectionObserver pagination.
           </p>
         </div>
 
         <PinterestMasonryDemo variant="full" />
       </section>
     </main>
-  );
+  )
 }
