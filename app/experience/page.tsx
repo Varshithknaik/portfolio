@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ExperienceTimeline } from "@/components/ExperienceTimeline";
-import { PageHeader } from "@/components/PageHeader";
+import { ExperienceTimeline } from "@/components/features/timeline/ExperienceTimeline";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata: Metadata = {
   title: "Experience",

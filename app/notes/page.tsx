@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { NotesIndex } from "@/components/NotesIndex";
-import { PageHeader } from "@/components/PageHeader";
+import { NotesIndex } from "@/components/features/notes/NotesIndex";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata: Metadata = {
   title: "Engineering Notes",

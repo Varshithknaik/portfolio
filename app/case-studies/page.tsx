@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { MasonrySystemPreview } from "@/components/MasonrySystemPreview";
-import { PageHeader } from "@/components/PageHeader";
+import { MasonrySystemPreview } from "@/components/features/masonry/MasonrySystemPreview";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { caseStudies } from "@/lib/site";
 
 export const metadata: Metadata = {

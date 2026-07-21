@@ -8,7 +8,7 @@ import {
   extractMarkdownHeadings,
   SafeMarkdown,
   stripMdxMetadata,
-} from "@/components/SafeMarkdown";
+} from "@/components/mdx/SafeMarkdown";
 import { Button } from "@/components/ui/button";
 import { projects } from "@/lib/site";
 

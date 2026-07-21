@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { PinterestMasonryDemo } from "@/components/PinterestMasonryDemo";
+import { PinterestMasonryDemo } from "@/components/features/masonry/PinterestMasonryDemo";
 import { Button } from "@/components/ui/button";
 import { caseStudies } from "@/lib/site";
 

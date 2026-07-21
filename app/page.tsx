@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, CircuitBoard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ExpandableWork } from "@/components/ExpandableWork";
-import { MotionSection } from "@/components/MotionSection";
-import { PageHeader } from "@/components/PageHeader";
-import { SectionHeader } from "@/components/SectionHeader";
+import { ExpandableWork } from "@/components/features/work/ExpandableWork";
+import { MotionSection } from "@/components/layout/MotionSection";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionHeader } from "@/components/layout/SectionHeader";
 import { notes } from "@/lib/site";
 
 export default function Home() {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Footer } from "@/components/Footer";
-import Nav from "@/components/Nav";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { Footer } from "@/components/layout/Footer";
+import Nav from "@/components/layout/Nav";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://varshith.dev"),

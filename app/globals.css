@@ -38,6 +38,22 @@
   --shadow-panel: 0 24px 80px rgba(16, 19, 26, 0.08);
 }
 
+.theme-icon-light {
+  display: none;
+}
+
+.theme-icon-dark {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon-light {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon-dark {
+  display: none;
+}
+
 * {
   box-sizing: border-box;
 }
