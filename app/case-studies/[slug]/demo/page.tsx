@@ -53,7 +53,7 @@ export default async function CaseStudyDemoPage({
               <span className="chip">Standalone demo</span>
             </div>
             <h1 className="mt-4 font-display text-[clamp(2.5rem,6vw,5.5rem)] font-semibold leading-[0.96] tracking-normal">
-              P-interest Feed Demo
+              Masonry Feed Demo
             </h1>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted">

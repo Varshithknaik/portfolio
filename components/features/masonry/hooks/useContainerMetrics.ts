@@ -11,6 +11,7 @@ export const useContainerMetrics = ({
 }) => {
   const [colCount, setColCount] = useState(3)
   const [colWidth, setColWidth] = useState(DEFAULT_COL_WIDTH)
+  const [hasMeasured, setHasMeasured] = useState<boolean>(false)
 
   useLayoutEffect(() => {
     const container = containerRef.current
@@ -26,6 +27,7 @@ export const useContainerMetrics = ({
 
       setColCount(count)
       setColWidth(width)
+      setHasMeasured(true)
     })
 
     observer.observe(container)
@@ -35,5 +37,6 @@ export const useContainerMetrics = ({
   return {
     colCount,
     colWidth,
+    hasMeasured,
   }
 }

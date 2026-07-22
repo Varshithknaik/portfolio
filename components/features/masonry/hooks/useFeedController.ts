@@ -1,7 +1,12 @@
 import { useCallback, useRef, useState } from 'react'
 import { Pin } from '../helper/MasonryLayoutEngine'
 
-type FeedPhase = 'unmeasured' | 'idle' | 'fetching' | 'error' | 'exhausted'
+export type FeedPhase =
+  | 'unmeasured'
+  | 'idle'
+  | 'fetching'
+  | 'error'
+  | 'exhausted'
 
 function preloadImage(url: string) {
   return new Promise<void>((resolve, reject) => {
@@ -22,7 +27,8 @@ export function useFeedController() {
   const paintPointerRef = useRef(0)
 
   const [pins, setPins] = useState<Pin[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const [phase, setPhase] = useState<FeedPhase>('idle')
+  const [hasMore, setHasMore] = useState<boolean>(true)
 
   const schedulePaint = useCallback(() => {
     let newlyPaintedCount = 0
@@ -47,7 +53,7 @@ export function useFeedController() {
     if (loadingRef.current || !hasMoreRef.current) return
 
     loadingRef.current = true
-    setLoading(true)
+    setPhase('fetching')
 
     try {
       const response = await fetch(`/api/pins?page=${pageRef.current}`)
@@ -55,10 +61,12 @@ export function useFeedController() {
 
       if (!nextPins.length) {
         hasMoreRef.current = false
-        setLoading(false)
+        setPhase('exhausted')
         loadingRef.current = false
         return
       }
+
+      setHasMore(true)
 
       const offset = allPinsRef.current.length
 
@@ -87,15 +95,17 @@ export function useFeedController() {
       pageRef.current++
     } catch {
       //
+      setPhase('error')
     } finally {
-      setLoading(false)
+      setPhase('idle')
       loadingRef.current = false
     }
   }, [schedulePaint])
 
   return {
     pins,
-    loading,
+    phase,
+    hasMore,
     loadBatch,
   }
 }

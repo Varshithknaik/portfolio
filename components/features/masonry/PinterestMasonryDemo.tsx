@@ -4,10 +4,10 @@ import { useEffect, useRef } from 'react'
 import { calculateMasonryLayout } from './helper/MasonryLayoutEngine'
 import { useFeedController } from './hooks/useFeedController'
 import { useContainerMetrics } from './hooks/useContainerMetrics'
+import { useAutoFill } from './hooks/useAutoFill'
 
 const GAP = 12
-const PAGE_SIZE = 20
-const DEFAULT_COL_WIDTH = 300
+const PRELOAD_DISTANCE = 3000
 
 type PinterestMasonryDemoProps = {
   variant?: 'card' | 'full'
@@ -20,9 +20,11 @@ export function PinterestMasonryDemo({
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
-  const { colCount, colWidth } = useContainerMetrics({ containerRef })
+  const { colCount, colWidth, hasMeasured } = useContainerMetrics({
+    containerRef,
+  })
 
-  const { pins, loadBatch } = useFeedController()
+  const { pins, phase, hasMore, loadBatch } = useFeedController()
 
   const {
     pins: layoutPins,
@@ -32,6 +34,14 @@ export function PinterestMasonryDemo({
     columnWidth: colWidth,
     columnCount: colCount,
     gap: GAP,
+  })
+
+  useAutoFill({
+    totalHeight,
+    hasMeasured,
+    phase,
+    hasMore,
+    loadBatch,
   })
 
   useEffect(() => {
@@ -44,15 +54,13 @@ export function PinterestMasonryDemo({
           void loadBatch()
         }
       },
-      { rootMargin: '220px' }
+      { rootMargin: '250px' }
     )
 
     observerRef.current.observe(sentinel)
 
     return () => observerRef.current?.disconnect()
-  }, [loadBatch])
-
-  console.log(layoutPins)
+  }, [colWidth, loadBatch, totalHeight])
 
   const containerHeight = totalHeight
 
