@@ -1,26 +1,28 @@
-import Link from "next/link";
-import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
-import remarkGfm from "remark-gfm";
+import Link from 'next/link'
+import ReactMarkdown, { type Components } from 'react-markdown'
+import rehypeSanitize from 'rehype-sanitize'
+import remarkGfm from 'remark-gfm'
 
 export type MarkdownHeading = {
-  id: string;
-  text: string;
-  depth: 1 | 2 | 3;
-};
+  id: string
+  text: string
+  depth: 1 | 2 | 3
+}
 
-const allowedUrlProtocols = new Set(["http:", "https:", "mailto:"]);
+const allowedUrlProtocols = new Set(['http:', 'https:', 'mailto:'])
 
 export function slugifyHeading(value: string) {
   return value
     .toLowerCase()
-    .replace(/[`*_~[\]()]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replace(/[`*_~[\]()]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
 }
 
 export function stripMdxMetadata(source: string) {
-  return source.replace(/^export\s+const\s+metadata\s*=\s*\{[\s\S]*?\};\s*/m, "").trim();
+  return source
+    .replace(/^export\s+const\s+metadata\s*=\s*\{[\s\S]*?\};\s*/m, '')
+    .trim()
 }
 
 export function extractMarkdownHeadings(source: string): MarkdownHeading[] {
@@ -33,41 +35,41 @@ export function extractMarkdownHeadings(source: string): MarkdownHeading[] {
       text: match[2].trim(),
       id: slugifyHeading(match[2]),
     }))
-    .filter((heading) => heading.depth === 2 || heading.depth === 3);
+    .filter((heading) => heading.depth === 2 || heading.depth === 3)
 }
 
 function isSafeUrl(value?: string) {
   if (!value) {
-    return false;
+    return false
   }
 
-  if (value.startsWith("/") || value.startsWith("#")) {
-    return true;
+  if (value.startsWith('/') || value.startsWith('#')) {
+    return true
   }
 
   try {
-    return allowedUrlProtocols.has(new URL(value).protocol);
+    return allowedUrlProtocols.has(new URL(value).protocol)
   } catch {
-    return false;
+    return false
   }
 }
 
 function getText(children: unknown): string {
-  if (typeof children === "string") {
-    return children;
+  if (typeof children === 'string') {
+    return children
   }
 
   if (Array.isArray(children)) {
-    return children.map(getText).join("");
+    return children.map(getText).join('')
   }
 
-  return "";
+  return ''
 }
 
 function highlightCode(value: string) {
   const tokens = value.split(
-    /(\b(?:const|let|type|return|max|floor|indexOf|min|number|string)\b|[(){}[\]]|=>|->|[+\-*/=])/g,
-  );
+    /(\b(?:const|let|type|return|max|floor|indexOf|min|number|string)\b|[(){}[\]]|=>|->|[+\-*/=])/g
+  )
 
   return tokens.map((token, index) => {
     if (/^\b(?:const|let|type|return)\b$/.test(token)) {
@@ -75,7 +77,7 @@ function highlightCode(value: string) {
         <span className="text-[#ffcc66]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
     if (/^\b(?:max|floor|indexOf|min)\b$/.test(token)) {
@@ -83,7 +85,7 @@ function highlightCode(value: string) {
         <span className="text-[#82aaff]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
     if (/^\b(?:number|string)\b$/.test(token)) {
@@ -91,7 +93,7 @@ function highlightCode(value: string) {
         <span className="text-[#c3e88d]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
     if (/^[(){}[\]]$/.test(token)) {
@@ -99,7 +101,7 @@ function highlightCode(value: string) {
         <span className="text-[#89ddff]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
     if (/^(=>|->|[+\-*/=])$/.test(token)) {
@@ -107,7 +109,7 @@ function highlightCode(value: string) {
         <span className="text-[#c792ea]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
     if (/^\d+$/.test(token)) {
@@ -115,16 +117,16 @@ function highlightCode(value: string) {
         <span className="text-[#f78c6c]" key={`${token}-${index}`}>
           {token}
         </span>
-      );
+      )
     }
 
-    return token;
-  });
+    return token
+  })
 }
 
 const markdownComponents: Components = {
   h1({ children }) {
-    const text = getText(children);
+    const text = getText(children)
     return (
       <h1
         className="font-display text-[clamp(2.75rem,7vw,6.5rem)] font-semibold leading-[0.96] tracking-normal"
@@ -132,63 +134,55 @@ const markdownComponents: Components = {
       >
         {children}
       </h1>
-    );
+    )
   },
   h2({ children }) {
-    const text = getText(children);
+    const text = getText(children)
     return (
       <h2
-        className="scroll-mt-24 pt-7 font-display text-3xl font-semibold tracking-normal"
+        className="scroll-mt-12 pt-3 font-display text-2xl font-semibold tracking-normal md:text-3xl"
         id={slugifyHeading(text)}
       >
         {children}
       </h2>
-    );
+    )
   },
   h3({ children }) {
-    const text = getText(children);
+    const text = getText(children)
     return (
       <h3
-        className="scroll-mt-24 pt-4 font-display text-xl font-semibold tracking-normal"
+        className="scroll-mt-12 pt-2 font-display text-lg font-semibold tracking-normal md:text-xl"
         id={slugifyHeading(text)}
       >
         {children}
       </h3>
-    );
+    )
   },
   p({ children }) {
-    return <p className="text-base leading-8 text-muted">{children}</p>;
+    return <p className="text-base leading-7 text-muted">{children}</p>
   },
   ul({ children }) {
-    return (
-      <ul className="grid list-disc gap-2 pl-5">
-        {children}
-      </ul>
-    );
+    return <ul className="grid list-disc gap-1.5 pl-5">{children}</ul>
   },
   ol({ children }) {
-    return (
-      <ol className="grid list-decimal gap-2 pl-5">
-        {children}
-      </ol>
-    );
+    return <ol className="grid list-decimal gap-1.5 pl-5">{children}</ol>
   },
   li({ children }) {
-    return <li className="pl-1 text-sm leading-7 text-muted">{children}</li>;
+    return <li className="pl-1 text-sm leading-6 text-muted">{children}</li>
   },
   a({ children, href }) {
     if (!isSafeUrl(href)) {
-      return <>{children}</>;
+      return <>{children}</>
     }
 
-    const className = "text-accent underline-offset-4 hover:underline";
+    const className = 'text-accent underline-offset-4 hover:underline'
 
-    if (href?.startsWith("/")) {
+    if (href?.startsWith('/')) {
       return (
         <Link className={className} href={href}>
           {children}
         </Link>
-      );
+      )
     }
 
     return (
@@ -196,80 +190,88 @@ const markdownComponents: Components = {
         className={className}
         href={href}
         rel="noopener noreferrer"
-        target={href?.startsWith("#") || href?.startsWith("mailto:") ? undefined : "_blank"}
+        target={
+          href?.startsWith('#') || href?.startsWith('mailto:')
+            ? undefined
+            : '_blank'
+        }
       >
         {children}
       </a>
-    );
+    )
   },
   img({ alt, src }) {
     if (!isSafeUrl(src)) {
-      return null;
+      return null
     }
 
     return (
       <img
-        alt={alt ?? ""}
-        className="my-6 rounded-ui border border-line"
+        alt={alt ?? ''}
+        className="my-4 rounded-ui border border-line"
         loading="lazy"
         src={src}
       />
-    );
+    )
   },
   code({ children, className }) {
-    const isBlock = className?.startsWith("language-");
-    const code = String(children).replace(/\n$/, "");
+    const isBlock = className?.startsWith('language-')
+    const code = String(children).replace(/\n$/, '')
 
     if (isBlock) {
       return (
-        <code className="block font-mono text-sm leading-7 text-[#d7deea]">
+        <code className="block font-mono text-sm leading-6 text-[#d7deea]">
           {highlightCode(code)}
         </code>
-      );
+      )
     }
 
     return (
       <code className="rounded border border-line bg-[var(--color-bg)] px-1.5 py-0.5 font-mono text-[0.9em] text-[var(--color-text)]">
         {children}
       </code>
-    );
+    )
   },
   pre({ children }) {
     return (
-      <pre className="overflow-x-auto rounded-ui border border-[#243044] bg-[#090d14] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <pre className="overflow-x-auto rounded-ui border border-[#243044] bg-[#090d14] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
         {children}
       </pre>
-    );
+    )
   },
   blockquote({ children }) {
     return (
-      <blockquote className="rounded-ui border border-line bg-[var(--color-accent-soft)] px-5 py-4 text-muted">
+      <blockquote className="rounded-ui border border-line bg-[var(--color-accent-soft)] px-4 py-3 text-muted">
         {children}
       </blockquote>
-    );
+    )
   },
   table({ children }) {
     return (
       <div className="overflow-x-auto rounded-ui border border-line">
         <table className="w-full border-collapse text-sm">{children}</table>
       </div>
-    );
+    )
   },
   th({ children }) {
     return (
-      <th className="border-b border-line bg-panel px-4 py-3 text-left font-mono text-xs uppercase tracking-[0.08em] text-accent">
+      <th className="border-b border-line bg-panel px-4 py-2.5 text-left font-mono text-xs uppercase tracking-[0.08em] text-accent">
         {children}
       </th>
-    );
+    )
   },
   td({ children }) {
-    return <td className="border-b border-line px-4 py-3 text-muted">{children}</td>;
+    return (
+      <td className="border-b border-line px-4 py-2.5 text-muted">
+        {children}
+      </td>
+    )
   },
-};
+}
 
 export function SafeMarkdown({ source }: { source: string }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ReactMarkdown
         components={markdownComponents}
         rehypePlugins={[rehypeSanitize]}
@@ -279,5 +281,5 @@ export function SafeMarkdown({ source }: { source: string }) {
         {source}
       </ReactMarkdown>
     </div>
-  );
+  )
 }

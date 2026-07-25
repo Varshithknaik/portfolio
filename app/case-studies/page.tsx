@@ -1,15 +1,15 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { MasonrySystemPreview } from "@/components/features/masonry/MasonrySystemPreview";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { caseStudies } from "@/lib/site";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { MasonrySystemPreview } from '@/components/features/masonry/MasonrySystemPreview'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { caseStudies } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: "Case Studies",
+  title: 'Case Studies',
   description:
-    "Implementation case studies covering real frontend systems, algorithms, tradeoffs, edge cases, and lessons learned.",
-};
+    'Implementation case studies covering real frontend systems, algorithms, tradeoffs, edge cases, and lessons learned.',
+}
 
 export default function CaseStudiesPage() {
   return (
@@ -35,12 +35,17 @@ export default function CaseStudiesPage() {
                     <span className="chip">{study.readingTime}</span>
                   </div>
                   <h2 className="mt-5 font-display text-4xl font-semibold leading-tight tracking-normal md:text-6xl">
-                    P-interest Feed
+                    Masonry Feed
                   </h2>
-                  <p className="mt-5 text-base leading-7 text-muted">{study.preview}</p>
+                  <p className="mt-5 text-base leading-7 text-muted">
+                    {study.preview}
+                  </p>
                   <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent">
                     Open implementation
-                    <ArrowRight className="transition group-hover:translate-x-1" size={16} />
+                    <ArrowRight
+                      className="transition group-hover:translate-x-1"
+                      size={16}
+                    />
                   </div>
                 </div>
                 <MasonrySystemPreview />
@@ -50,5 +55,5 @@ export default function CaseStudiesPage() {
         </div>
       </section>
     </main>
-  );
+  )
 }

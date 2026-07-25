@@ -7,7 +7,6 @@ import { useContainerMetrics } from './hooks/useContainerMetrics'
 import { useAutoFill } from './hooks/useAutoFill'
 
 const GAP = 12
-const PRELOAD_DISTANCE = 3000
 
 type PinterestMasonryDemoProps = {
   variant?: 'card' | 'full'

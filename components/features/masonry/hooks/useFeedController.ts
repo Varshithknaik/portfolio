@@ -93,11 +93,11 @@ export function useFeedController() {
           })
       })
       pageRef.current++
+      setPhase('idle')
     } catch {
       //
       setPhase('error')
     } finally {
-      setPhase('idle')
       loadingRef.current = false
     }
   }, [schedulePaint])

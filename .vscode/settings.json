@@ -4,6 +4,17 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "[mdx]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null,
+    "editor.codeActionsOnSave": {}
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null,
+    "editor.codeActionsOnSave": {}
+  },
+  "prettier.embeddedLanguageFormatting": "off",
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,

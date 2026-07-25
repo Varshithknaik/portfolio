@@ -1,53 +1,60 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import {
   extractMarkdownHeadings,
   SafeMarkdown,
   stripMdxMetadata,
-} from "@/components/mdx/SafeMarkdown";
-import { Button } from "@/components/ui/button";
-import { caseStudies } from "@/lib/site";
+} from '@/components/mdx/SafeMarkdown'
+import { Button } from '@/components/ui/button'
+import { caseStudies } from '@/lib/site'
 
 type CaseStudyPageProps = {
   params: Promise<{
-    slug: string;
-  }>;
-};
+    slug: string
+  }>
+}
 
 async function getCaseStudyMarkdown(slug: string) {
-  const filePath = path.join(process.cwd(), "content", "case-studies", `${slug}.mdx`);
-  const source = await readFile(filePath, "utf8");
-  return stripMdxMetadata(source);
+  const filePath = path.join(
+    process.cwd(),
+    'content',
+    'case-studies',
+    `${slug}.mdx`
+  )
+  const source = await readFile(filePath, 'utf8')
+  return stripMdxMetadata(source)
 }
 
 export function generateStaticParams() {
-  return caseStudies.map((study) => ({ slug: study.slug }));
+  return caseStudies.map((study) => ({ slug: study.slug }))
 }
 
-export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const study = caseStudies.find((item) => item.slug === slug);
+export async function generateMetadata({
+  params,
+}: CaseStudyPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const study = caseStudies.find((item) => item.slug === slug)
 
   return {
-    title: study?.title ?? "Case Study",
+    title: study?.title ?? 'Case Study',
     description: study?.problem,
-  };
+  }
 }
 
 export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
-  const { slug } = await params;
-  const study = caseStudies.find((item) => item.slug === slug);
+  const { slug } = await params
+  const study = caseStudies.find((item) => item.slug === slug)
 
   if (!study) {
-    notFound();
+    notFound()
   }
 
-  const markdown = await getCaseStudyMarkdown(slug);
-  const headings = extractMarkdownHeadings(markdown);
+  const markdown = await getCaseStudyMarkdown(slug)
+  const headings = extractMarkdownHeadings(markdown)
 
   return (
     <main>
@@ -95,5 +102,5 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
         </div>
       </article>
     </main>
-  );
+  )
 }

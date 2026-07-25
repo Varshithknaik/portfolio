@@ -1,16 +1,21 @@
 export const metadata = {
-  title: "Responsive Pinterest Feed",
+  title: "Responsive Masonry Feed",
   category: "Frontend Systems",
   readingTime: "12 min read"
 };
 
-# Responsive Pinterest Feed
+# Responsive Masonry Feed
 
-An implementation note for a Pinterest-style homepage and masonry feed. This file is the source of truth for the case-study page, so images, diagrams, and longer notes can be added here without editing the route component.
+A masonry layout arranges variable-height items into columns with no fixed boundaries. 
+These items of varying heights are packed into columns to eliminate vertical gaps,
+resembling stacked bricks. This layout is commonly used for image grids, 
+such as those on Pinterest or photo gallery websites.
 
-## Question
+## Problem Statement
 
-Design a Pinterest-style image feed with a focus on the masonry layout, responsive behavior, data fetching, loading states, and frontend performance.
+Build an API-backed masonry image feed that adapts to container width, fills
+tall viewports automatically, handles slow or failed images gracefully, and
+keeps scroll performance stable as the feed grows.
 
 ## Requirements
 
@@ -32,7 +37,7 @@ Design a Pinterest-style image feed with a focus on the masonry layout, responsi
 Add diagrams as regular markdown images:
 
 ```md
-![Masonry architecture](/case-studies/pinterest/masonry-architecture.png)
+![Masonry architecture](/case-studies/Masonry/masonry-architecture.png)
 ```
 
 Remote images are also supported when the URL uses `https`.
