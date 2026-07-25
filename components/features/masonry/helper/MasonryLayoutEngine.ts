@@ -42,7 +42,7 @@ export function calculateMasonryLayout(
     columnHeights[shortestColumn] += item.height + gap
   }
 
-  const totalHeight = Math.max(...columnHeights) - gap
+  const totalHeight = Math.max(0, Math.max(...columnHeights) - gap)
 
   return { pins: layoutPins, columnHeights, totalHeight }
 }

@@ -17,13 +17,26 @@ Build an API-backed masonry image feed that adapts to container width, fills
 tall viewports automatically, handles slow or failed images gracefully, and
 keeps scroll performance stable as the feed grows.
 
-## Requirements
+## Design goal
 
-- Render variable-height image cards in responsive columns.
-- Load more pins as the user approaches the end of the feed.
-- Keep the layout stable while images load or fail.
-- Support mobile, tablet, desktop, and container resize behavior.
-- Preserve scroll and route state when users open and return from a pin detail page.
+Build a responsive Pinterest-style feed with these guarantees:
+
+- pins are placed in the shortest column using the backend-provided frame height;
+- the first viewport fills automatically without waiting for a scroll event;
+- only one page request is active at a time;
+- skeletons reserve realistic space until content is ready;
+- one slow or failed image never blocks other pins;
+- resize always recalculates from source data, never stale coordinates;
+- the full feed keeps a bounded number of DOM nodes through virtualization;
+- loading, retry, completion, and accessibility states are explicit.
+
+### Non-goals
+
+- recommendation/ranking logic;
+- image upload or server-side image processing;
+- live insertion of newly published pins;
+- preserving strict visual order between image load completions;
+- infinite scrolling inside the compact `card` preview.
 
 ## Architecture
 

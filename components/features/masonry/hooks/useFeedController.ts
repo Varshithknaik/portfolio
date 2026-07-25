@@ -61,8 +61,9 @@ export function useFeedController() {
 
       if (!nextPins.length) {
         hasMoreRef.current = false
-        setPhase('exhausted')
         loadingRef.current = false
+        setPhase('exhausted')
+        setHasMore(false)
         return
       }
 
