@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { calculateMasonryLayout } from './helper/MasonryLayoutEngine'
 import { useFeedController } from './hooks/useFeedController'
 import { useContainerMetrics } from './hooks/useContainerMetrics'
 import { PRELOAD_DISTANCE, useAutoFill } from './hooks/useAutoFill'
 import { MasonryPinComponent } from './component/MasonryPin.component'
 import { useFeedOrderReveal } from './hooks/useFeedOrderReveal'
+import { useInfiniteScrollTrigger } from './hooks/useInfiniteScrollTrigger'
 
 const GAP = 12
 
@@ -21,7 +22,6 @@ export function PinterestMasonryDemo({
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const { colCount, colWidth, hasMeasured } = useContainerMetrics({
     containerRef,
@@ -45,40 +45,23 @@ export function PinterestMasonryDemo({
     gap: GAP,
   })
 
-  const loadNextBatch = useCallback(async () => {
-    if (!allSettled) return
-
-    await loadBatch()
-  }, [allSettled, loadBatch])
-
   useAutoFill({
     enabled: isFull,
     totalHeight,
     hasMeasured,
     phase,
     hasMore,
-    loadBatch: loadNextBatch,
+    loadBatch,
   })
+  const canRequestNextPage = phase === 'idle' && hasMore && allSettled
 
-  const canLoadMore = phase === 'idle' && allSettled && hasMore
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel || !isFull || !canLoadMore) return
-
-    observerRef.current = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          void loadNextBatch()
-        }
-      },
-      { rootMargin: `0px 0px ${PRELOAD_DISTANCE}px 0px` }
-    )
-
-    observerRef.current.observe(sentinel)
-
-    return () => observerRef.current?.disconnect()
-  }, [canLoadMore, colWidth, isFull, phase, totalHeight, loadNextBatch])
+  useInfiniteScrollTrigger({
+    targetRef: sentinelRef,
+    enabled: isFull && hasMeasured,
+    canTrigger: canRequestNextPage,
+    rootMargin: `0px 0px ${PRELOAD_DISTANCE}px 0px`,
+    onIntersect: loadBatch,
+  })
 
   const containerHeight = totalHeight
 
@@ -96,7 +79,7 @@ export function PinterestMasonryDemo({
         </div>
         <button
           className="button button-secondary min-h-9 px-3 text-xs"
-          onClick={() => void loadNextBatch()}
+          onClick={() => void loadBatch()}
           type="button"
         >
           Load batch

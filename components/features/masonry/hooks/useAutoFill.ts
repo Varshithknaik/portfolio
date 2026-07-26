@@ -31,5 +31,5 @@ export const useAutoFill = ({
     })
 
     return () => cancelAnimationFrame(frame)
-  })
+  }, [enabled, hasMeasured, hasMore, loadBatch, phase, totalHeight])
 }
