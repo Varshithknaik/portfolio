@@ -3,7 +3,6 @@ export type Pin = {
   alt: string
   height: number
   url: string
-  isSkeleton?: boolean
 }
 
 export type LayoutPin = Pin & {

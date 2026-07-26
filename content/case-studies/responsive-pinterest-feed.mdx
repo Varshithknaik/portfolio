@@ -55,17 +55,6 @@ Add diagrams as regular markdown images:
 
 Remote images are also supported when the URL uses `https`.
 
-## Masonry Algorithm
-
-```ts
-count = max(1, floor((containerWidth + gap) / (minColumnWidth + gap)))
-columnWidth = (containerWidth - (count - 1) * gap) / count
-shortestColumn = indexOf(min(columnHeights))
-left = shortestColumn * (columnWidth + gap)
-top = columnHeights[shortestColumn]
-columnHeights[shortestColumn] += pin.height + gap
-```
-
 ## Data Contract
 
 ```ts
@@ -76,6 +65,23 @@ type Pin = {
   height: number;
 };
 ```
+
+## Layout math
+
+```text
+columnCount = max(1, floor((containerWidth + gap) / (minColumnWidth + gap)))
+columnWidth = (containerWidth - (columnCount - 1) * gap) / columnCount
+
+displayHeight = item.height
+columnIndex = index of minimum(columnHeights)
+left = columnIndex * (columnWidth + gap)
+top = columnHeights[columnIndex]
+bottom = top + displayHeight
+columnHeights[columnIndex] = bottom + gap
+
+totalHeight = max(columnHeights) - gap
+```
+
 
 ## Performance Notes
 

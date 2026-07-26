@@ -8,6 +8,7 @@ export type FeedPhase =
   | 'error'
   | 'exhausted'
 
+//@deprecated
 function preloadImage(url: string) {
   return new Promise<void>((resolve, reject) => {
     const image = new Image()
@@ -22,32 +23,9 @@ export function useFeedController() {
   const hasMoreRef = useRef(true)
   const loadingRef = useRef(false)
 
-  const loadedPinsRef = useRef<boolean[]>([])
-  const allPinsRef = useRef<Pin[]>([])
-  const paintPointerRef = useRef(0)
-
   const [pins, setPins] = useState<Pin[]>([])
   const [phase, setPhase] = useState<FeedPhase>('idle')
   const [hasMore, setHasMore] = useState<boolean>(true)
-
-  const schedulePaint = useCallback(() => {
-    let newlyPaintedCount = 0
-
-    while (
-      paintPointerRef.current < loadedPinsRef.current.length &&
-      loadedPinsRef.current[paintPointerRef.current]
-    ) {
-      allPinsRef.current[paintPointerRef.current] = {
-        ...allPinsRef.current[paintPointerRef.current],
-        isSkeleton: false,
-      }
-      paintPointerRef.current++
-      newlyPaintedCount++
-    }
-    if (newlyPaintedCount > 0) {
-      setPins([...allPinsRef.current])
-    }
-  }, [])
 
   const loadBatch = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return
@@ -68,31 +46,8 @@ export function useFeedController() {
       }
 
       setHasMore(true)
+      setPins((prev) => [...prev, ...nextPins])
 
-      const offset = allPinsRef.current.length
-
-      allPinsRef.current = [
-        ...allPinsRef.current,
-        ...nextPins.map((item) => ({ ...item, isSkeleton: true })),
-      ]
-
-      loadedPinsRef.current = [
-        ...loadedPinsRef.current,
-        ...new Array(nextPins.length).fill(false),
-      ]
-
-      setPins([...allPinsRef.current])
-
-      nextPins.forEach((pin, index) => {
-        const globalIndex = offset + index
-
-        preloadImage(pin.url)
-          .catch(() => console.log('fail to load the image'))
-          .finally(() => {
-            loadedPinsRef.current[globalIndex] = true
-            schedulePaint()
-          })
-      })
       pageRef.current++
       setPhase('idle')
     } catch {
@@ -101,7 +56,7 @@ export function useFeedController() {
     } finally {
       loadingRef.current = false
     }
-  }, [schedulePaint])
+  }, [])
 
   return {
     pins,

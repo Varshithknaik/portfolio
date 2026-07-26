@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { calculateMasonryLayout } from './helper/MasonryLayoutEngine'
 import { useFeedController } from './hooks/useFeedController'
 import { useContainerMetrics } from './hooks/useContainerMetrics'
 import { PRELOAD_DISTANCE, useAutoFill } from './hooks/useAutoFill'
+import { MasonryPinComponent } from './component/MasonryPin.component'
+import { useFeedOrderReveal } from './hooks/useFeedOrderReveal'
 
 const GAP = 12
 
@@ -27,6 +29,12 @@ export function PinterestMasonryDemo({
 
   const { pins, phase, hasMore, loadBatch } = useFeedController()
 
+  const orderedPinIds = useMemo(() => pins.map((pin) => pin.id), [pins])
+
+  const { isPinRevealed, onImageSettled, allSettled } = useFeedOrderReveal({
+    pins: orderedPinIds,
+  })
+
   const {
     pins: layoutPins,
     columnHeights,
@@ -37,23 +45,31 @@ export function PinterestMasonryDemo({
     gap: GAP,
   })
 
+  const loadNextBatch = useCallback(async () => {
+    if (!allSettled) return
+
+    await loadBatch()
+  }, [allSettled, loadBatch])
+
   useAutoFill({
     enabled: isFull,
     totalHeight,
     hasMeasured,
     phase,
     hasMore,
-    loadBatch,
+    loadBatch: loadNextBatch,
   })
+
+  const canLoadMore = phase === 'idle' && allSettled && hasMore
 
   useEffect(() => {
     const sentinel = sentinelRef.current
-    if (!sentinel || !isFull) return
+    if (!sentinel || !isFull || !canLoadMore) return
 
     observerRef.current = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          void loadBatch()
+          void loadNextBatch()
         }
       },
       { rootMargin: `0px 0px ${PRELOAD_DISTANCE}px 0px` }
@@ -62,7 +78,7 @@ export function PinterestMasonryDemo({
     observerRef.current.observe(sentinel)
 
     return () => observerRef.current?.disconnect()
-  }, [colWidth, isFull, loadBatch, totalHeight])
+  }, [canLoadMore, colWidth, isFull, phase, totalHeight, loadNextBatch])
 
   const containerHeight = totalHeight
 
@@ -80,7 +96,7 @@ export function PinterestMasonryDemo({
         </div>
         <button
           className="button button-secondary min-h-9 px-3 text-xs"
-          onClick={() => void loadBatch()}
+          onClick={() => void loadNextBatch()}
           type="button"
         >
           Load batch
@@ -94,32 +110,17 @@ export function PinterestMasonryDemo({
           height: isFull ? containerHeight : Math.min(containerHeight, 1200),
         }}
       >
-        {layoutPins.map((pin) => (
-          <div
-            className="absolute overflow-hidden rounded-[16px] bg-panel transition-[left,top,width] duration-300"
+        {layoutPins.map((pin, idx) => (
+          <MasonryPinComponent
             key={pin.id}
-            style={{
-              height: pin.height,
-              left: pin.left,
-              top: pin.top,
-              width: pin.width,
-            }}
-          >
-            {pin.isSkeleton ? (
-              <div className="h-full w-full animate-pulse bg-[#cbd5e1]" />
-            ) : (
-              <>
-                <img
-                  alt={pin.alt}
-                  className="h-full w-full object-cover"
-                  src={pin.url}
-                />
-              </>
-            )}
-          </div>
+            pin={pin}
+            isRevealed={isPinRevealed(pin.id)}
+            onImageSettled={() => onImageSettled(idx)}
+          />
         ))}
-
-        <div className="absolute bottom-0 h-px w-full" ref={sentinelRef} />
+        {hasMeasured && (
+          <div className="absolute bottom-0 h-px w-full" ref={sentinelRef} />
+        )}
       </div>
     </div>
   )

@@ -5,6 +5,16 @@ const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   output: 'standalone',
-};
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+}
 
-module.exports = withMDX(nextConfig);
+module.exports = withMDX(nextConfig)
