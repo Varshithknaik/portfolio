@@ -25,17 +25,20 @@ Build a responsive Pinterest-style feed with these guarantees:
 - the first viewport fills automatically without waiting for a scroll event;
 - only one page request is active at a time;
 - skeletons reserve realistic space until content is ready;
-- one slow or failed image never blocks other pins;
+- pins are revealed in feed order — each image decodes and waits its turn;
+- a failed or slow image settles with a fallback so the reveal queue advances;
 - resize always recalculates from source data, never stale coordinates;
-- the full feed keeps a bounded number of DOM nodes through virtualization;
 - loading, retry, completion, and accessibility states are explicit.
+
+#### Future work
+
+- virtualization to keep a bounded number of DOM nodes at scale.
 
 ### Non-goals
 
 - recommendation/ranking logic;
 - image upload or server-side image processing;
 - live insertion of newly published pins;
-- preserving strict visual order between image load completions;
 - infinite scrolling inside the compact `card` preview.
 
 ## Architecture
@@ -87,7 +90,7 @@ totalHeight = max(columnHeights) - gap
 
 - Use `ResizeObserver` to measure the feed container.
 - Use `IntersectionObserver` for sentinel pagination.
-- Preload images before painting them into the positioned list.
+- Decode images off-thread via `img.decode()` and reveal in feed order.
 - Keep mutable pagination and image-loaded flags in refs.
 - Add virtualization when DOM size becomes expensive.
 

@@ -57,8 +57,8 @@ export default async function CaseStudyDemoPage({
             </h1>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted">
-            API-backed masonry feed with ResizeObserver layout, image
-            preloading, shortest-column placement, skeletons, and
+            API-backed masonry feed with ResizeObserver layout, image ordered
+            image reveal, shortest-column placement, skeletons, and
             IntersectionObserver pagination.
           </p>
         </div>

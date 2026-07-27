@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState } from 'react'
 
 const GAP = 12
-const PAGE_SIZE = 20
 const DEFAULT_COL_WIDTH = 300
 
 export const useContainerMetrics = ({

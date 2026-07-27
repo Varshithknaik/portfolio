@@ -22,6 +22,7 @@ export function useFeedController() {
   const pageRef = useRef(0)
   const hasMoreRef = useRef(true)
   const loadingRef = useRef(false)
+  const pinIdsRef = useRef(new Set<number>())
 
   const [pins, setPins] = useState<Pin[]>([])
   const [phase, setPhase] = useState<FeedPhase>('idle')
@@ -37,7 +38,27 @@ export function useFeedController() {
       const response = await fetch(`/api/pins?page=${pageRef.current}`)
       const { pins: nextPins } = (await response.json()) as { pins: Pin[] }
 
-      if (!nextPins.length) {
+      const batchIds = new Set<number>()
+      const acceptedPins: Pin[] = []
+
+      for (const pin of nextPins) {
+        const validHeight = Number.isFinite(pin.height) && pin.height > 0
+
+        if (!validHeight) throw new Error('Invalid pin height')
+
+        if (pinIdsRef.current.has(pin.id) || batchIds.has(pin.id)) {
+          throw new Error(`Duplicate pin ID: ${pin.id}`)
+        }
+
+        batchIds.add(pin.id)
+        acceptedPins.push(pin)
+      }
+
+      for (const id of batchIds) {
+        pinIdsRef.current.add(id)
+      }
+
+      if (!acceptedPins.length) {
         hasMoreRef.current = false
         loadingRef.current = false
         setPhase('exhausted')
@@ -46,7 +67,7 @@ export function useFeedController() {
       }
 
       setHasMore(true)
-      setPins((prev) => [...prev, ...nextPins])
+      setPins((prev) => [...prev, ...acceptedPins])
 
       pageRef.current++
       setPhase('idle')

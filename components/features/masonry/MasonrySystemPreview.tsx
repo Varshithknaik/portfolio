@@ -25,7 +25,7 @@ const steps = [
   'ResizeObserver reads container width',
   'Column count and width are recalculated',
   'Pins are assigned to the shortest column',
-  'Images preload before entering painted state',
+  'Images decode off-thread and reveal in feed order',
   'IntersectionObserver requests the next page',
 ]
 

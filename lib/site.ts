@@ -209,7 +209,7 @@ export const caseStudies = [
     problem:
       'Build a production-style Pinterest feed that lays out variable-height cards, adapts to container width, loads more content at the right time, and avoids painting broken or unloaded images.',
     preview:
-      'A masonry feed built as a layout engine: measurement, shortest-column placement, preloaded rendering, sentinel pagination, and resize recalculation.',
+      'A masonry feed built as a layout engine: measurement, shortest-column placement, ordered image reveal, sentinel pagination, and resize recalculation.',
     implementation: [
       {
         title: 'Measure the container, not the browser',
@@ -224,8 +224,8 @@ export const caseStudies = [
         body: 'A columnHeights array tracks vertical height per column. Each incoming pin is assigned to the shortest column, then that column height is incremented.',
       },
       {
-        title: 'Preload before painting',
-        body: 'Images are loaded into memory before being added to painted pins. This prevents a feed full of empty absolute-positioned boxes and keeps reveal order predictable.',
+        title: 'Decode and reveal in order',
+        body: 'Each image decodes off the main thread, then reveals in feed order. A failed or slow image settles with a fallback so the queue advances without blocking subsequent pins.',
       },
       {
         title: 'Use a sentinel for infinite loading',
@@ -275,7 +275,7 @@ export const caseStudies = [
     lessons: [
       'A mature masonry layout is a scheduling and measurement problem, not just a CSS layout problem.',
       'Responsive behavior should be tied to the container that owns the UI.',
-      'Preloading and paint order matter when layout uses absolute positioning.',
+      'Decode-then-reveal order matters when layout uses absolute positioning.',
       'The cleanest next step is extracting the masonry engine into a hook with a tiny render component.',
     ],
   },
