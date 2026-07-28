@@ -30,6 +30,7 @@ export const useInfiniteScrollTrigger = ({
     if (!isIntersectingRef.current) return
     if (hasTriggeredRef.current) return
 
+    hasTriggeredRef.current = true
     void onTriggerRef.current()
   }, [])
 

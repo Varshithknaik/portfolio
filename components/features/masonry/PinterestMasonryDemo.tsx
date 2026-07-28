@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { calculateMasonryLayout } from './helper/MasonryLayoutEngine'
 import { useFeedController } from './hooks/useFeedController'
 import { useContainerMetrics } from './hooks/useContainerMetrics'
@@ -34,6 +34,11 @@ export function PinterestMasonryDemo({
   const { isPinRevealed, onImageSettled, allSettled } = useFeedOrderReveal({
     pins: orderedPinIds,
   })
+  const canRequestNextPage = phase === 'idle' && hasMore && allSettled
+
+  const requestNextPage = useCallback(() => {
+    if (allSettled) loadBatch()
+  }, [allSettled, loadBatch])
 
   const {
     pins: layoutPins,
@@ -51,16 +56,15 @@ export function PinterestMasonryDemo({
     hasMeasured,
     phase,
     hasMore,
-    loadBatch,
+    loadBatch: requestNextPage,
   })
-  const canRequestNextPage = phase === 'idle' && hasMore && allSettled
 
   useInfiniteScrollTrigger({
     targetRef: sentinelRef,
     enabled: isFull && hasMeasured,
     canTrigger: canRequestNextPage,
     rootMargin: `0px 0px ${PRELOAD_DISTANCE}px 0px`,
-    onIntersect: loadBatch,
+    onIntersect: requestNextPage,
   })
 
   const containerHeight = totalHeight
@@ -79,7 +83,7 @@ export function PinterestMasonryDemo({
         </div>
         <button
           className="button button-secondary min-h-9 px-3 text-xs"
-          onClick={() => void loadBatch()}
+          onClick={() => void requestNextPage()}
           type="button"
         >
           Load batch

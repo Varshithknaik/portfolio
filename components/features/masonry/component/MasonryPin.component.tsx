@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LayoutPin } from '../helper/MasonryLayoutEngine'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,17 @@ export const MasonryPinComponent = ({
   onImageSettled,
 }: MasonryPinComponentProps) => {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+
+  useEffect(() => {
+    if (isRevealed) return
+
+    const timer = setTimeout(() => {
+      setStatus('error')
+      onImageSettled()
+    }, 5000)
+
+    return () => clearTimeout(timer)
+  }, [isRevealed, onImageSettled])
 
   return (
     <div
