@@ -6,12 +6,14 @@ import { cn } from '@/lib/utils'
 interface MasonryPinComponentProps {
   pin: LayoutPin
   isRevealed: boolean
+  shouldLoadEagerly: boolean
   onImageSettled: () => void
 }
 
 export const MasonryPinComponent = ({
   pin,
   isRevealed,
+  shouldLoadEagerly,
   onImageSettled,
 }: MasonryPinComponentProps) => {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -24,7 +26,9 @@ export const MasonryPinComponent = ({
       onImageSettled()
     }, 5000)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+    }
   }, [isRevealed, onImageSettled])
 
   return (
@@ -43,6 +47,7 @@ export const MasonryPinComponent = ({
         className={`h-full w-full object-cover ${isRevealed ? 'opacity-100' : 'opacity-0'}`}
         src={pin.url}
         sizes={`${Math.ceil(pin.width)}px`}
+        loading={shouldLoadEagerly ? 'eager' : 'lazy'}
         fill
         onLoad={async (event) => {
           const image = event.currentTarget

@@ -48,12 +48,41 @@ Build a responsive Pinterest-style feed with these guarantees:
 - `/api/pins` returns paginated pin records.
 - The masonry engine turns raw pins into `left`, `top`, `width`, and `height`.
 
-## Diagram Slot
+## Data flow
 
-Add diagrams as regular markdown images:
 
-```md
-![Masonry architecture](/case-studies/Masonry/masonry-architecture.png)
+```text
+/api/pins
+    |
+    v
+useFeedController
+    |-- pins --------------------------+
+    `-- currentBatchIds                |
+                                       v
+                             calculateMasonryLayout
+                                       |
+                              layoutPins + totalHeight
+                                       |
+                          +------------+-------------+
+                          |                          |
+                          v                          v
+                  useVirtualization          current batch filter
+                  scrolledPins               frontierPins
+                  activeIds                       |
+                          |                        |
+                          +-------- union ---------+
+                                     |
+                                  renderPins
+                                     |
+                               MasonryPin mounts
+                                     |
+                               onImageSettled(id)
+                                     |
+                           useFeedOrderReveal
+                              |             |
+                       reveal permission  allSettled
+                                             |
+                                      next-page gate
 ```
 
 Remote images are also supported when the URL uses `https`.

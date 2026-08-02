@@ -13,7 +13,7 @@ const pins: Pin[] = Array.from({ length: 1000 }, (_, index) => {
 
   return {
     id: index,
-    url: `https://picsum.photos/400/${height}?random=${index}`,
+    url: `https://picsum.photos/seed/pin-${index}/400/${height}`,
     alt: `Pinterest feed image ${index}`,
     height,
   }

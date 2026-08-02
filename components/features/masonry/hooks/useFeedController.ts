@@ -25,6 +25,7 @@ export function useFeedController() {
   const pinIdsRef = useRef(new Set<number>())
 
   const [pins, setPins] = useState<Pin[]>([])
+  const [currentBatchIds, setCurrentBatchIds] = useState<number[]>([])
   const [phase, setPhase] = useState<FeedPhase>('idle')
   const [hasMore, setHasMore] = useState<boolean>(true)
 
@@ -67,6 +68,7 @@ export function useFeedController() {
       }
 
       setHasMore(true)
+      setCurrentBatchIds(acceptedPins.map((pin) => pin.id))
       setPins((prev) => [...prev, ...acceptedPins])
 
       pageRef.current++
@@ -81,6 +83,7 @@ export function useFeedController() {
 
   return {
     pins,
+    currentBatchIds,
     phase,
     hasMore,
     loadBatch,

@@ -1,41 +1,55 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ScrollDirection } from './useVirtualization'
 
 interface FeedOrderRevealProps {
   pins: number[]
+  activeIds: number[]
+  scrollDirection: ScrollDirection
 }
 
-export const useFeedOrderReveal = ({ pins }: FeedOrderRevealProps) => {
+export const useFeedOrderReveal = ({
+  pins,
+  scrollDirection,
+  activeIds,
+}: FeedOrderRevealProps) => {
   const [revealedIds, setRevealedIds] = useState<Set<number>>(() => new Set())
 
-  const paintPointerRef = useRef(0)
-  const loadedPinsRef = useRef<boolean[]>([])
+  const settledIdsRef = useRef<Set<number>>(new Set())
+  const [settledCount, setSettledCount] = useState(0)
 
   const markSettled = useCallback(() => {
     const newlyPainted: number[] = []
 
-    while (
-      paintPointerRef.current < loadedPinsRef.current.length &&
-      loadedPinsRef.current[paintPointerRef.current]
-    ) {
-      newlyPainted.push(pins[paintPointerRef.current])
-      paintPointerRef.current++
+    const orderedIds =
+      scrollDirection === 'forward' ? activeIds : [...activeIds].reverse()
+
+    for (const pinId of orderedIds) {
+      if (!settledIdsRef.current.has(pinId)) break
+      newlyPainted.push(pinId)
     }
-    if (newlyPainted.length > 0) {
-      setRevealedIds((prev) => {
-        const next = new Set(prev)
-        for (const id of newlyPainted) {
+
+    if (newlyPainted.length === 0) return
+
+    setRevealedIds((prev) => {
+      const next = new Set(prev)
+      let hasChanged = false
+      for (const id of newlyPainted) {
+        if (!next.has(id)) {
           next.add(id)
+          hasChanged = true
         }
-        return next
-      })
-    }
-  }, [pins])
+      }
+      return hasChanged ? next : prev
+    })
+  }, [activeIds, scrollDirection])
 
   const onImageSettled = useCallback(
-    (idx: number) => {
-      if (loadedPinsRef.current[idx]) return
+    (pinId: number) => {
+      if (settledIdsRef.current.has(pinId)) return
 
-      loadedPinsRef.current[idx] = true
+      settledIdsRef.current.add(pinId)
+      setSettledCount(settledIdsRef.current.size)
+
       markSettled()
     },
     [markSettled]
@@ -48,11 +62,15 @@ export const useFeedOrderReveal = ({ pins }: FeedOrderRevealProps) => {
     [revealedIds]
   )
 
-  const allSettled = pins.length === 0 || revealedIds.size === pins.length
+  useEffect(() => {
+    queueMicrotask(() => markSettled())
+  }, [activeIds, scrollDirection, settledCount, markSettled])
+
+  const allSettled = settledCount === pins.length
 
   return {
+    allSettled,
     onImageSettled,
     isPinRevealed,
-    allSettled,
   }
 }
