@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { isValidElement, type ReactElement } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
+import { MermaidDiagram } from '@/components/mdx/MermaidDiagram'
 
 export type MarkdownHeading = {
   id: string
@@ -233,6 +235,17 @@ const markdownComponents: Components = {
     )
   },
   pre({ children }) {
+    if (isValidElement(children)) {
+      const codeElement = children as ReactElement<{
+        children?: unknown
+        className?: string
+      }>
+
+      if (codeElement.props.className === 'language-mermaid') {
+        return <MermaidDiagram chart={String(codeElement.props.children)} />
+      }
+    }
+
     return (
       <pre className="overflow-x-auto rounded-ui border border-[#243044] bg-[#090d14] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
         {children}
