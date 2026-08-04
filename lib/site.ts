@@ -20,7 +20,8 @@ export const profile = {
 export const navigation = [
   { href: '/experience', label: 'Experience' },
   { href: '/case-studies', label: 'Case Studies' },
-  { href: '/notes', label: 'Notes' },
+  // Notes will return to the public navigation after the content refresh.
+  // { href: '/notes', label: 'Notes' },
   { href: '/projects', label: 'Projects' },
   { href: '/resume', label: 'Resume' },
 ]

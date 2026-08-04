@@ -12,14 +12,15 @@ export const metadata: Metadata = {
 
 export default function CaseStudiesPage() {
   return (
-    <main>
+    <main className="work-page work-index-page">
       <PageHeader
+        className="work-index-page-header"
         kicker="Case Studies"
         title="Implementation notes for product-facing systems."
         copy="Each case study starts as a high-signal preview, then opens into the implementation decisions, code model, edge cases, and lessons."
       />
 
-      <section className="site-section pt-0">
+      <section className="site-section work-index-page-list">
         <div className="site-container grid gap-5">
           {caseStudies.map((study) => (
             <CaseStudyCard

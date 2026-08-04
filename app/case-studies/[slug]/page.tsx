@@ -57,7 +57,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
   const headings = extractMarkdownHeadings(markdown)
 
   return (
-    <main>
+    <main className="work-page work-detail-page">
       <article className="site-container pb-16 pt-7.5 md:pb-24 md:pt-10">
         <Button asChild variant="ghost" className="mb-10">
           <Link href="/case-studies">
@@ -77,7 +77,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
           </div>
 
           <aside className="hidden lg:sticky lg:top-24 lg:block">
-            <div className="rounded-ui border border-line bg-panel p-4">
+            <div className="work-sidebar-card rounded-ui border border-line bg-panel p-4">
               <p className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
                 On this page
               </p>

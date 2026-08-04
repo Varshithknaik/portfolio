@@ -31,9 +31,9 @@ const steps = [
 
 export function MasonrySystemPreview() {
   return (
-    <div className="surface-card p-5">
+    <div className="surface-card work-feature-preview p-5">
       <div className="grid gap-3 md:grid-cols-[1fr_220px]">
-        <div className="rounded-ui border border-line bg-[var(--color-bg)] p-3">
+        <div className="work-feature-inset rounded-ui border border-line bg-[var(--color-bg)] p-3">
           <div className="grid grid-cols-4 gap-3">
             {columns.map((column, columnIndex) => (
               <div className="grid content-start gap-3" key={columnIndex}>
@@ -57,7 +57,7 @@ export function MasonrySystemPreview() {
         <div className="grid gap-2">
           {steps.map((step, index) => (
             <div
-              className="rounded-ui border border-line bg-[var(--color-bg)] p-3"
+              className="work-feature-inset rounded-ui border border-line bg-[var(--color-bg)] p-3"
               key={step}
             >
               <p className="font-mono text-[11px] text-accent">0{index + 1}</p>

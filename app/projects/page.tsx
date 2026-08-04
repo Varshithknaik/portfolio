@@ -12,17 +12,18 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <main>
+    <main className="work-page work-index-page">
       <PageHeader
+        className="work-index-page-header"
         kicker="Projects"
         title="A serious systems build in progress."
         copy="One presentable project, documented through low-level design, service contracts, event flow, persistence choices, and the tradeoffs behind the architecture."
       />
-      <section className="site-section pt-0">
+      <section className="site-section work-index-page-list">
         <div className="site-container grid gap-5">
           {projects.map((project) => (
             <article
-              className="surface-card p-6 md:p-8"
+              className="surface-card work-feature-card p-6 md:p-8"
               id={project.slug}
               key={project.title}
             >
@@ -50,14 +51,14 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <div className="grid gap-4">
-                  <div className="rounded-ui border border-line bg-[var(--color-bg)] p-5">
+                  <div className="work-feature-inset rounded-ui border border-line bg-[var(--color-bg)] p-5">
                     <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
                       Architecture
                     </h3>
                     <p className="mt-4 text-sm leading-6 text-muted">{project.architecture}</p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-ui border border-line bg-[var(--color-bg)] p-5">
+                    <div className="work-feature-inset rounded-ui border border-line bg-[var(--color-bg)] p-5">
                       <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
                         Tech Stack
                       </h3>
@@ -69,7 +70,7 @@ export default function ProjectsPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="rounded-ui border border-line bg-[var(--color-bg)] p-5">
+                    <div className="work-feature-inset rounded-ui border border-line bg-[var(--color-bg)] p-5">
                       <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
                         Interesting Problems
                       </h3>

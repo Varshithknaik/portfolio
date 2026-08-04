@@ -26,7 +26,7 @@ export function CaseStudyCard({
     <article>
       <Link
         aria-label={`${actionLabel}: ${title}`}
-        className="surface-card group block p-5 transition hover:border-accent md:p-8"
+        className="surface-card work-feature-card group block p-5 transition md:p-8"
         href={href}
       >
         <div

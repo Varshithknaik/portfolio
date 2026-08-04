@@ -1,83 +1,83 @@
-"use client";
+import { experience } from '@/lib/site'
+import { cn } from '@/lib/utils'
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import { experience } from "@/lib/site";
-import { cn } from "@/lib/utils";
+type ExperienceTimelineProps = {
+  variant?: 'compact' | 'detailed' | 'resume'
+}
 
-const groups = ["responsibilities", "architecture", "challenges", "lessons"] as const;
+const summaries = [
+  'End-to-end product development, Micro-Frontends, configurable workflows, design systems, and frontend–backend contracts.',
+  'Responsive enterprise applications, reusable React foundations, data experiences, and rendering performance.',
+]
 
-export function ExperienceTimeline() {
-  const [active, setActive] = useState(0);
+export function ExperienceTimeline({
+  variant = 'detailed',
+}: ExperienceTimelineProps) {
+  const showDetails = variant !== 'compact'
+  const showArchitecture = variant === 'detailed'
 
   return (
-    <div className="grid gap-5">
-      {experience.map((job, index) => {
-        const isActive = active === index;
+    <div
+      className={cn(
+        'home-timeline-card career-timeline-card',
+        `career-timeline-card--${variant}`,
+      )}
+    >
+      <div className="home-timeline-header">
+        <span>Career timeline</span>
+        <span className="home-timeline-status">Present</span>
+      </div>
 
-        return (
-          <article className="surface-card" key={job.company}>
-            <button
-              className="flex w-full items-start justify-between gap-6 p-6 text-left md:p-8"
-              type="button"
-              onClick={() => setActive(isActive ? -1 : index)}
-            >
-              <div className="grid gap-5 md:grid-cols-[180px_1fr]">
-                <div>
-                  <p className="font-mono text-xs text-subtle">{job.period}</p>
-                  <p className="mt-2 font-display text-xl font-semibold tracking-normal">
-                    {job.company}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-[var(--color-text)]">{job.role}</p>
-                  <p className="mt-2 text-sm leading-6 text-muted">{job.scope}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {job.tags.map((tag) => (
-                      <span className="chip" key={tag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+      <ol>
+        {experience.map((job, index) => (
+          <li key={job.company}>
+            <span className="home-timeline-dot" aria-hidden="true" />
+            <div className="career-timeline-date">
+              <p className="home-timeline-period">{job.period}</p>
+            </div>
+
+            <div className="career-timeline-role">
+              <h3>{job.role}</h3>
+              <p className="home-timeline-company">
+                {job.company} · {job.scope}
+              </p>
+              <p className="home-timeline-detail">{summaries[index]}</p>
+
+              <div className="home-timeline-tags">
+                {job.tags.slice(0, 4).map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
               </div>
-              <ChevronDown
-                className={cn("mt-1 shrink-0 text-accent transition", isActive && "rotate-180")}
-                size={18}
-              />
-            </button>
-            <AnimatePresence initial={false}>
-              {isActive ? (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="grid gap-4 border-t border-line p-6 md:grid-cols-2 md:p-8">
-                    {groups.map((group) => (
-                      <div className="rounded-ui border border-line bg-[var(--color-bg)] p-5" key={group}>
-                        <h3 className="font-mono text-xs uppercase tracking-[0.08em] text-accent">
-                          {group.replace("-", " ")}
-                        </h3>
-                        <ul className="mt-4 grid gap-3">
-                          {job[group].map((item) => (
-                            <li className="text-sm leading-6 text-muted" key={item}>
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
+
+              {showDetails ? (
+                <div className="career-timeline-details">
+                  <section>
+                    <p className="career-timeline-label">Selected ownership</p>
+                    <ul>
+                      {job.responsibilities
+                        .slice(0, variant === 'resume' ? 3 : 4)
+                        .map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                    </ul>
+                  </section>
+
+                  {showArchitecture ? (
+                    <section>
+                      <p className="career-timeline-label">Architecture</p>
+                      <ul>
+                        {job.architecture.slice(0, 3).map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+                </div>
               ) : null}
-            </AnimatePresence>
-          </article>
-        );
-      })}
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
-  );
+  )
 }
