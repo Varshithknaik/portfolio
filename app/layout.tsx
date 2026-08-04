@@ -8,15 +8,15 @@ import Nav from "@/components/layout/Nav";
 export const metadata: Metadata = {
   metadataBase: new URL("https://varshith.dev"),
   title: {
-    default: "Varshith K - Enterprise Frontend Engineer",
+    default: "Varshith K - Software Engineer — Frontend",
     template: "%s - Varshith K",
   },
   description:
-    "Frontend Engineer building enterprise SaaS products, frontend platforms, design systems, and micro-frontend architecture.",
+    "Software Engineer specializing in frontend engineering, enterprise SaaS, API contract design, Micro-Frontends, and product systems, with exposure to Node.js services.",
   openGraph: {
-    title: "Varshith K - Enterprise Frontend Engineer",
+    title: "Varshith K - Software Engineer — Frontend",
     description:
-      "Engineering portfolio for enterprise frontend architecture, technical writing, and interactive demos.",
+      "Four years building enterprise products with React, TypeScript, Next.js, API contracts, Micro-Frontends, and hands-on distributed-system projects.",
     type: "website",
   },
 };

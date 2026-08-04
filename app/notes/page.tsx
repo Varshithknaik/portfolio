@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 export const metadata: Metadata = {
   title: "Engineering Notes",
   description:
-    "Frontend engineering knowledge base covering React, Next.js, browser internals, Webpack, performance, and architecture.",
+    "Software engineering knowledge base covering React, browser internals, delivery architecture, performance, and system design.",
 };
 
 export default function NotesPage() {

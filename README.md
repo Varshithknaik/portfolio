@@ -1,6 +1,6 @@
 # Varshith K - Engineering Portfolio
 
-Premium engineering website for enterprise frontend architecture, technical writing, case studies, projects, and interactive demos.
+Engineering portfolio for frontend-oriented product development, backend and distributed-system projects, technical writing, case studies, and interactive demos.
 
 ## Architecture
 

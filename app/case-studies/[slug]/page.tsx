@@ -58,7 +58,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
 
   return (
     <main>
-      <article className="site-container py-16 md:py-24">
+      <article className="site-container pb-16 pt-7.5 md:pb-24 md:pt-10">
         <Button asChild variant="ghost" className="mb-10">
           <Link href="/case-studies">
             <ArrowLeft size={16} /> Case Studies

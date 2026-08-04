@@ -9,7 +9,7 @@ import {
 
 export const profile = {
   name: 'Varshith K',
-  role: 'Frontend Engineer',
+  role: 'Software Engineer — Frontend',
   company: 'Avathon',
   location: 'Bengaluru, India',
   email: 'varshithknaik@gmail.com',
@@ -103,7 +103,7 @@ export const capabilities = [
   {
     icon: ServerCog,
     label: 'API Contracts',
-    detail: 'Frontend-owned request models, validation, and data boundaries.',
+    detail: 'Request models, validation, service boundaries, and data ownership.',
   },
   {
     icon: TimerReset,
@@ -119,26 +119,28 @@ export const featuredWork = [
     summary:
       'A multi-module compliance platform for Product Master, Tariff Classification, Bulk Classification, BOM Management, Reporting, and Settings.',
     details:
-      'Built scalable, configurable workflows and data-intensive screens with Ag Grid, including bulk operations, complex filtering, validation, business-rule-driven flows, and frontend architecture that can absorb rapid business change.',
+      'Built data-intensive trade-compliance workflows with AG Grid, including bulk processing, advanced filtering, CSV uploads, inline editing, validation, and frontend-driven business rules. The platform is expanding into AI-assisted classification, Denied Party Screening, and ECCN workflows.',
     stack: [
       'React',
       'TypeScript',
-      'Ag Grid',
+      'AG Grid',
+      'Module Federation',
       'Configurable Workflows',
-      'Enterprise SaaS',
+      'AI-assisted UX',
     ],
   },
   {
-    title: 'VisualSense',
+    title: 'Visual Sense',
     eyebrow: 'AI-assisted Analytics',
     summary:
       'An analytics platform that transforms uploaded datasets into interactive dashboards and conversational insights.',
     details:
-      'Developed real-time visualizations, optimized frontend responsiveness, and implemented scalable state management for dataset exploration, dashboard interaction, and AI-assisted analysis workflows.',
+      'Developed reusable React interfaces, interactive dashboards, and conversational data experiences. Integrated REST APIs with Redux Toolkit and RTK Query, then improved responsiveness through scalable state management and rendering optimizations.',
     stack: [
       'React',
       'TypeScript',
-      'Redux',
+      'Redux Toolkit',
+      'RTK Query',
       'Data Visualization',
       'AI-assisted UX',
     ],
@@ -148,19 +150,22 @@ export const featuredWork = [
 export const experience = [
   {
     company: 'Avathon',
-    role: 'Frontend Engineer',
+    role: 'Frontend Developer',
     period: 'Jan 2025 - Present',
     scope: 'Global Trade Management platform',
     responsibilities: [
-      'Build the application from scratch and own frontend architecture.',
-      'Design API contracts with product, design, and backend partners.',
-      'Create configurable workflows and feature-flag driven experiences.',
-      'Maintain Storybook design-system components and review shared component PRs.',
+      'Own end-to-end frontend development of the Global Trade Management platform, building Product Master, Tariff Classification, Bulk Classification, BOM, Reports, and Settings from the ground up.',
+      'Design data-intensive trade-compliance workflows with React, TypeScript, and AG Grid, including bulk processing, filtering, CSV uploads, inline editing, validation, and frontend-driven business rules.',
+      'Lead frontend-backend API contract design for request and response models, validation requirements, and integration standards.',
+      'Contribute to the Micro-Frontend platform through module integration, shared dependencies, theming, and reusable Storybook components.',
+      'Build configuration-driven and feature-flag-based architecture for tenant-specific behavior, hierarchical data visibility, backward compatibility, and rapid requirement changes.',
+      'Maintain the Storybook design system and contribute to production issue resolution across React and Node.js services.',
     ],
     architecture: [
-      'Feature-based modules with shared hooks, validation schemas, data adapters, and UI primitives.',
-      'Micro frontend platform patterns using Webpack Module Federation.',
-      'RBAC and tenant-aware UI composition for enterprise compliance workflows.',
+      'Configuration-driven modules with reusable hooks, API abstractions, validation schemas, utilities, and centralized state.',
+      'Micro-Frontend platform integration using Webpack Module Federation and shared dependencies.',
+      'Multi-tenant workflows with RBAC, hierarchical data visibility, feature flags, and backward-compatible behavior.',
+      'API contracts that align frontend workflows with backend validation and service boundaries.',
     ],
     challenges: [
       'High configuration needs without fragmenting the product into customer forks.',
@@ -172,7 +177,7 @@ export const experience = [
       'Feature flags need product semantics, not just boolean conditionals.',
       'Design systems work best when examples encode real product constraints.',
     ],
-    tags: ['React', 'TypeScript', 'Module Federation', 'Storybook', 'RBAC'],
+    tags: ['React', 'TypeScript', 'AG Grid', 'Module Federation', 'Node.js'],
   },
   {
     company: 'PwC India',
@@ -180,9 +185,9 @@ export const experience = [
     period: 'Jul 2022 - Dec 2024',
     scope: 'Enterprise client applications',
     responsibilities: [
-      'Built React and Next.js applications for client-facing digital solutions.',
-      'Created reusable UI components and frontend utilities.',
-      'Improved rendering performance with workers, lazy loading, and memoization.',
+      'Built responsive, accessible enterprise applications with React, Next.js, Redux Toolkit, and Tailwind CSS.',
+      'Developed reusable components, dashboards, and conversational experiences for an AI-assisted analytics platform, integrating REST APIs with Redux Toolkit and RTK Query.',
+      'Improved compute-intensive workflows with Web Workers, lazy loading, memoization, and rendering optimizations.',
     ],
     architecture: [
       'Feature-focused React modules with shared UI foundations.',
@@ -196,7 +201,7 @@ export const experience = [
       'A small component library can improve delivery speed when ownership is clear.',
       'Performance work is strongest when it starts with measurement.',
     ],
-    tags: ['React', 'Next.js', 'TailwindCSS', 'Web Workers'],
+    tags: ['React', 'Next.js', 'Redux Toolkit', 'RTK Query', 'Web Workers'],
   },
 ]
 
@@ -345,24 +350,27 @@ export const projects = [
     type: 'Work in progress',
     readingTime: '8 min read',
     overview:
-      'A low-level systems build for an Order Management System with command services, query projections, inventory coordination, authentication, and real-time collaboration surfaces.',
+      'A CQRS and event-driven order platform with separate Order, Inventory, Payment, and Read services connected through Kafka and exposed through an API Gateway.',
     architecture:
-      'CQRS architecture with REST at the API Gateway, gRPC between services, Kafka as the event bridge, PostgreSQL for write models, MongoDB for denormalized read models, and shared packages for proto and event contracts.',
+      'Containerized Node.js services with REST at the API Gateway, gRPC service contracts, Kafka event propagation, PostgreSQL write models, MongoDB read models, and asynchronous workflows based on Saga and transactional Outbox patterns.',
     stack: [
-      'Node.js',
+      'React',
       'TypeScript',
+      'Node.js',
       'gRPC',
       'Kafka',
-      'Prisma',
       'PostgreSQL',
       'MongoDB',
-      'React',
+      'Docker',
     ],
     problems: [
       'Command/query separation',
       'Event contracts',
       'Read model projections',
       'Inventory reservation',
+      'Payment workflows',
+      'Saga orchestration',
+      'Transactional outbox',
       'Kafka replay',
       'Service boundaries',
     ],

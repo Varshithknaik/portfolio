@@ -18,7 +18,7 @@ export function GET() {
 <channel>
   <title>${profile.name} Engineering Notes</title>
   <link>${baseUrl}/notes</link>
-  <description>Frontend engineering notes on React, browser internals, performance, and architecture.</description>
+  <description>Software engineering notes on React, browser internals, performance, delivery architecture, and system design.</description>
   ${items}
 </channel>
 </rss>`;

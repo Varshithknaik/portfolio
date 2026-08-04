@@ -7,7 +7,7 @@ import { profile } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Contact Varshith K for frontend engineering roles and enterprise SaaS opportunities.",
+  description: "Contact Varshith K for software engineering roles and enterprise product opportunities.",
 };
 
 export default function ContactPage() {
@@ -15,8 +15,8 @@ export default function ContactPage() {
     <main>
       <PageHeader
         kicker="Contact"
-        title="Let’s talk about frontend systems."
-        copy="Open to frontend engineering roles where product quality, architecture, performance, and platform thinking matter."
+        title="Let’s talk about product systems."
+        copy="Open to Software Engineer roles with deep frontend ownership, API collaboration, product architecture, performance, and platform thinking."
       >
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           <Button asChild variant="secondary" className="h-24 justify-start px-5">

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 export const metadata: Metadata = {
   title: "Experience",
   description:
-    "Experience timeline focused on frontend architecture, enterprise SaaS ownership, and product engineering lessons.",
+    "Experience timeline focused on enterprise product ownership, frontend architecture, API boundaries, and engineering lessons.",
 };
 
 export default function ExperiencePage() {
