@@ -16,13 +16,7 @@ export const MasonryPinComponent = ({
   shouldLoadEagerly,
   onImageSettled,
 }: MasonryPinComponentProps) => {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(() => {
-    if (isRevealed) {
-      return 'ready'
-    }
-
-    return 'loading'
-  })
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
 
   useEffect(() => {
     if (isRevealed) {
@@ -41,7 +35,7 @@ export const MasonryPinComponent = ({
 
   return (
     <div
-      className="absolute overflow-hidden rounded-[16px] bg-panel transition-[left,top,width] duration-300"
+      className="absolute overflow-hidden rounded-[16px] bg-panel transition-[left,top,width] duration-300 motion-reduce:transition-none"
       key={pin.id}
       style={{
         height: pin.height,
@@ -52,7 +46,7 @@ export const MasonryPinComponent = ({
     >
       <Image
         alt={pin.alt}
-        className={`h-full w-full object-cover ${isRevealed ? 'opacity-100' : 'opacity-0'}`}
+        className={`h-full w-full object-cover ${isRevealed && status === 'ready' ? 'opacity-100' : 'opacity-0'}`}
         src={pin.url}
         sizes={`${Math.ceil(pin.width)}px`}
         loading={shouldLoadEagerly ? 'eager' : 'lazy'}
@@ -62,6 +56,7 @@ export const MasonryPinComponent = ({
           await image.decode().catch(() => {})
           requestAnimationFrame(() => {
             onImageSettled()
+            setStatus('ready')
           })
         }}
         onError={() => {
@@ -72,8 +67,8 @@ export const MasonryPinComponent = ({
       <div
         aria-hidden="true"
         className={cn(
-          'absolute inset-0 bg-[#cbd5e1] transition-opacity duration-200',
-          !isRevealed
+          'absolute inset-0 bg-[#cbd5e1] transition-opacity duration-200 motion-reduce:transition-none',
+          status === 'loading' || !isRevealed
             ? 'opacity-100 animate-pulse z-10'
             : 'pointer-events-none opacity-0'
         )}

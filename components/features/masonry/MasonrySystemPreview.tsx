@@ -43,6 +43,7 @@ export function MasonrySystemPreview() {
                     key={`${columnIndex}-${pinIndex}`}
                     style={{ height: pin.height }}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       alt=""
                       className="h-full w-full object-cover opacity-80"

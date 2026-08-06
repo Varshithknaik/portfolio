@@ -11,6 +11,7 @@ import { useInfiniteScrollTrigger } from './hooks/useInfiniteScrollTrigger'
 import { useVirtualization } from './hooks/useVirtualization'
 
 const GAP = 12
+const OVERSCAN = 300
 
 function deduplicateById<T extends { id: number }>(pins: T[]) {
   const seenIds = new Set<number>()
@@ -37,6 +38,7 @@ export function PinterestMasonryDemo({
 
   const { colCount, colWidth, hasMeasured } = useContainerMetrics({
     containerRef,
+    gap: GAP,
   })
 
   const { pins, currentBatchIds, phase, hasMore, loadBatch } =
@@ -54,6 +56,7 @@ export function PinterestMasonryDemo({
     totalHeight,
     containerRef,
     layoutPins,
+    overscan: OVERSCAN,
   })
 
   const currentBatchIdSet = useMemo(

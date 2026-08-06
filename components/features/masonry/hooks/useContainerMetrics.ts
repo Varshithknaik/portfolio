@@ -1,15 +1,16 @@
 import { useLayoutEffect, useState } from 'react'
 
-const GAP = 12
-const DEFAULT_COL_WIDTH = 250
-
 export const useContainerMetrics = ({
   containerRef,
+  gap,
+  defaultColWidth = 250,
 }: {
   containerRef: React.RefObject<HTMLDivElement>
+  gap: number
+  defaultColWidth?: number
 }) => {
   const [colCount, setColCount] = useState(3)
-  const [colWidth, setColWidth] = useState(DEFAULT_COL_WIDTH)
+  const [colWidth, setColWidth] = useState(defaultColWidth)
   const [hasMeasured, setHasMeasured] = useState<boolean>(false)
 
   useLayoutEffect(() => {
@@ -20,9 +21,9 @@ export const useContainerMetrics = ({
       const containerWidth = entry.contentRect.width
       const count = Math.max(
         1,
-        Math.floor((containerWidth + GAP) / (DEFAULT_COL_WIDTH + GAP))
+        Math.floor((containerWidth + gap) / (defaultColWidth + gap))
       )
-      const width = (containerWidth - (count - 1) * GAP) / count
+      const width = (containerWidth - (count - 1) * gap) / count
 
       setColCount(count)
       setColWidth(width)
@@ -31,7 +32,7 @@ export const useContainerMetrics = ({
 
     observer.observe(container)
     return () => observer.disconnect()
-  }, [containerRef])
+  }, [containerRef, gap, defaultColWidth])
 
   return {
     colCount,

@@ -5,9 +5,8 @@ interface UseVirtualizationProps {
   totalHeight: number
   containerRef: React.RefObject<HTMLDivElement | null>
   layoutPins: LayoutPin[]
+  overscan?: number
 }
-
-const OVERSCAN = 300
 
 export type ScrollDirection = 'forward' | 'backward'
 
@@ -15,6 +14,7 @@ export const useVirtualization = ({
   totalHeight,
   containerRef,
   layoutPins,
+  overscan = 300,
 }: UseVirtualizationProps) => {
   const [viewPort, setViewPort] = useState<{
     top: number
@@ -58,8 +58,8 @@ export const useVirtualization = ({
   }, [containerRef, totalHeight])
 
   return useMemo(() => {
-    const top = viewPort.top - OVERSCAN
-    const bottom = viewPort.bottom + OVERSCAN
+    const top = viewPort.top - overscan
+    const bottom = viewPort.bottom + overscan
 
     const scrolledPins = layoutPins.filter((pin) => {
       const pinBottom = pin.top + pin.height
@@ -71,5 +71,5 @@ export const useVirtualization = ({
       scrollDirection,
       activeIds: scrolledPins.map((pin) => pin.id),
     }
-  }, [layoutPins, viewPort, scrollDirection])
+  }, [layoutPins, viewPort, scrollDirection, overscan])
 }

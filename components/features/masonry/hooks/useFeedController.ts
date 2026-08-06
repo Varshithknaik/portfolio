@@ -1,12 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { Pin } from '../helper/MasonryLayoutEngine'
 
-export type FeedPhase =
-  | 'unmeasured'
-  | 'idle'
-  | 'fetching'
-  | 'error'
-  | 'exhausted'
+export type FeedPhase = 'idle' | 'fetching' | 'error' | 'exhausted'
 
 //@deprecated
 function preloadImage(url: string) {
