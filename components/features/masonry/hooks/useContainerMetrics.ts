@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from 'react'
 
 const GAP = 12
-const DEFAULT_COL_WIDTH = 300
+const DEFAULT_COL_WIDTH = 250
 
 export const useContainerMetrics = ({
   containerRef,

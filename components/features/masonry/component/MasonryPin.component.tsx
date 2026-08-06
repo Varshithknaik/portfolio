@@ -16,10 +16,18 @@ export const MasonryPinComponent = ({
   shouldLoadEagerly,
   onImageSettled,
 }: MasonryPinComponentProps) => {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(() => {
+    if (isRevealed) {
+      return 'ready'
+    }
+
+    return 'loading'
+  })
 
   useEffect(() => {
-    if (isRevealed) return
+    if (isRevealed) {
+      return
+    }
 
     const timer = setTimeout(() => {
       setStatus('error')
