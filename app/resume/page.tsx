@@ -81,7 +81,7 @@ export default function ResumePage() {
 
             <div className="resume-editorial-actions">
               <Button asChild>
-                <a href="/VarshithK_FE_SWE.pdf" download>
+                <a href="/VarshithK_FE.pdf" download>
                   Download PDF <Download size={16} />
                 </a>
               </Button>
