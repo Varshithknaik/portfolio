@@ -104,7 +104,8 @@ export const capabilities = [
   {
     icon: ServerCog,
     label: 'API Contracts',
-    detail: 'Request models, validation, service boundaries, and data ownership.',
+    detail:
+      'Request models, validation, service boundaries, and data ownership.',
   },
   {
     icon: TimerReset,
@@ -210,6 +211,84 @@ export const caseStudies = [
   {
     slug: 'responsive-pinterest-feed',
     title: 'Responsive Masonry Feed',
+    category: 'Frontend Systems',
+    readingTime: '12 min read',
+    problem:
+      'Build a production-style Pinterest feed that lays out variable-height cards, adapts to container width, loads more content at the right time, and avoids painting broken or unloaded images.',
+    preview:
+      'A masonry feed built as a layout engine: measurement, shortest-column placement, ordered image reveal, sentinel pagination, and resize recalculation.',
+    implementation: [
+      {
+        title: 'Measure the container, not the browser',
+        body: 'The layout uses ResizeObserver on the feed container so column count responds to sidebars, panels, and container changes that window resize would miss.',
+      },
+      {
+        title: 'Calculate columns from minimum viable width',
+        body: 'Column count is derived from available width, minimum column width, and gap. Leftover space is distributed back into each column so the grid uses the full container.',
+      },
+      {
+        title: 'Place each pin in the shortest column',
+        body: 'A columnHeights array tracks vertical height per column. Each incoming pin is assigned to the shortest column, then that column height is incremented.',
+      },
+      {
+        title: 'Decode and reveal in order',
+        body: 'Each image decodes off the main thread, then reveals in feed order. A failed or slow image settles with a fallback so the queue advances without blocking subsequent pins.',
+      },
+      {
+        title: 'Use a sentinel for infinite loading',
+        body: 'IntersectionObserver watches a one-pixel sentinel at the bottom of the absolute-positioned container and triggers the next batch with root margin.',
+      },
+      {
+        title: 'Recalculate on responsive changes',
+        body: 'When column count or width changes, existing pins are re-laid out from scratch so the layout remains coherent after resize.',
+      },
+    ],
+    codeDecisions: [
+      {
+        label: 'ResizeObserver',
+        detail:
+          'Chosen over window resize because the feed should react to element-level layout changes, not just viewport changes.',
+      },
+      {
+        label: 'useLayoutEffect',
+        detail:
+          'Used for measurement so the browser does not paint a visibly wrong first layout before dimensions are applied.',
+      },
+      {
+        label: 'Refs for feed state',
+        detail:
+          'Pagination, loading guards, image-loaded flags, and column heights live in refs to avoid unnecessary render loops while async loading progresses.',
+      },
+      {
+        label: 'Absolute positioning',
+        detail:
+          'Each pin receives left, top, width, and height values, giving precise masonry control without relying on CSS columns that break ordering and measurement.',
+      },
+    ],
+    math: [
+      'count = max(1, floor((containerWidth + gap) / (minColumnWidth + gap)))',
+      'columnWidth = (containerWidth - (count - 1) * gap) / count',
+      'left = shortestColumnIndex * (columnWidth + gap)',
+      'top = columnHeights[shortestColumnIndex]',
+    ],
+    edgeCases: [
+      'Container width changes without a viewport resize.',
+      'Images resolve out of order.',
+      'A network batch returns no more pins.',
+      'A resize happens after several pages have already been positioned.',
+      'Skeleton pins should occupy the same coordinate system as real pins.',
+      'Image failures need a fallback path without infinite retry loops.',
+    ],
+    lessons: [
+      'A mature masonry layout is a scheduling and measurement problem, not just a CSS layout problem.',
+      'Responsive behavior should be tied to the container that owns the UI.',
+      'Decode-then-reveal order matters when layout uses absolute positioning.',
+      'The cleanest next step is extracting the masonry engine into a hook with a tiny render component.',
+    ],
+  },
+  {
+    slug: 'rich-text-editor',
+    title: 'Rich Text Editor for case-studies',
     category: 'Frontend Systems',
     readingTime: '12 min read',
     problem:
