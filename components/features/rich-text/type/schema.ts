@@ -1,4 +1,8 @@
-type Mark = 'bold' | 'italic' | 'underline' | { type: 'link'; href: string }
+export type Mark =
+  | 'bold'
+  | 'italic'
+  | 'underline'
+  | { type: 'link'; href: string }
 
 export type NodeKey = string
 
