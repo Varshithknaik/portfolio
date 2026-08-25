@@ -1,10 +1,5 @@
-import {
-  isElementNode,
-  isRootNode,
-  isTextNode,
-  normalizeTextChildren,
-} from '../helper/nodeUtils'
-import { EditorState, Mark, NodeKey, NodeMap } from '../type/schema'
+import { isElementNode, isRootNode, isTextNode } from '../helper/nodeUtils'
+import { EditorState, Mark, NodeKey } from '../type/schema'
 
 interface NodeRendererProps {
   state: EditorState
@@ -33,21 +28,23 @@ export const NodeRenderer = ({ state, nodeKey }: NodeRendererProps) => {
         {node.text}
       </span>
     )
-    return [...node.marks].reverse().reduce((acc: React.ReactNode, mark: Mark) => {
-      if (mark === 'bold') {
-        return <strong>{acc}</strong>
-      }
-      if (mark === 'italic') {
-        return <i>{acc}</i>
-      }
-      if (mark === 'underline') {
-        return <u>{acc}</u>
-      }
-      if (typeof mark === 'object' && mark.type === 'link') {
-        return <a href={mark.href}>{acc}</a>
-      }
-      return acc
-    }, content)
+    return [...node.marks]
+      .reverse()
+      .reduce((acc: React.ReactNode, mark: Mark) => {
+        if (mark === 'bold') {
+          return <strong>{acc}</strong>
+        }
+        if (mark === 'italic') {
+          return <i>{acc}</i>
+        }
+        if (mark === 'underline') {
+          return <u>{acc}</u>
+        }
+        if (typeof mark === 'object' && mark.type === 'link') {
+          return <a href={mark.href}>{acc}</a>
+        }
+        return acc
+      }, content)
   }
 
   if (isElementNode(node)) {

@@ -25,7 +25,37 @@ export const createEmptyState = (): EditorState => {
       type: 'paragraph',
       key: paragraphKey,
       parent: rootKey,
-      children: [],
+      children: ['t-empty', 't-1', 't-2', 't-3'],
+    },
+    't-empty': {
+      type: 'text',
+      key: 't-empty',
+      parent: 'p-1',
+      text: '',
+      marks: [],
+    },
+    // 2. A valid text node with a mark
+    't-1': {
+      type: 'text',
+      key: 't-1',
+      parent: 'p-1',
+      text: 'Hello ',
+      marks: ['bold'],
+    },
+    // 3. Another valid text node with the same mark (eventually you'll merge these!)
+    't-2': {
+      type: 'text',
+      key: 't-2',
+      parent: 'p-1',
+      text: 'world',
+      marks: ['bold'],
+    },
+    't-3': {
+      type: 'text',
+      key: 't-3',
+      parent: 'p-1',
+      text: ' people',
+      marks: ['italic'],
     },
   }
 
@@ -64,7 +94,7 @@ function makeSortValue(m: Mark): number {
   return MARK_ORDER[type] ?? 99
 }
 
-function canonicalizeMarks(marks: Mark[]): Mark[] {
+export function canonicalizeMarks(marks: Mark[]): Mark[] {
   const seen = new Set<string>()
 
   return marks
@@ -77,82 +107,9 @@ function canonicalizeMarks(marks: Mark[]): Mark[] {
     .sort((a, b) => makeSortValue(a) - makeSortValue(b))
 }
 
-function sameMarks(a: Mark[], b: Mark[]): boolean {
+export function sameMarks(a: Mark[], b: Mark[]): boolean {
   if (a.length !== b.length) return false
   return a.every((m, i) => markKey(m) === markKey(b[i]))
 }
 
-export function normalizeTextChildren(
-  nodeMap: NodeMap,
-  parentKey: NodeKey
-): NodeMap {
-  const parent = nodeMap[parentKey]
-  if (!parent || !isElementNode(parent)) return nodeMap
-
-  const nextMap: NodeMap = { ...nodeMap }
-  const normalizedChildren: NodeKey[] = []
-
-  for (const childKey of parent.children) {
-    const child = nodeMap[childKey]
-
-    if (!child) continue
-
-    if (child.type === 'root') {
-      throw new Error('Root node should not be a child of any node')
-    }
-
-    // Preserve the invalid text nodes
-    if (!isTextNode(child)) {
-      nextMap[childKey] = {
-        ...child,
-        parent: parentKey,
-      }
-      normalizedChildren.push(childKey)
-      continue
-    }
-
-    if (child.text.length === 0) {
-      delete nextMap[childKey]
-      continue
-    }
-
-    const normalizedChild: TextNode = {
-      ...child,
-      parent: parentKey,
-      marks: canonicalizeMarks(child.marks),
-    }
-
-    nextMap[childKey] = normalizedChild
-
-    // Now check if previous is same
-    const prevKey = normalizedChildren.at(-1)
-    const previous = prevKey ? nextMap[prevKey] : undefined
-
-    if (
-      prevKey &&
-      previous &&
-      isTextNode(previous) &&
-      sameMarks(normalizedChild.marks, previous.marks)
-    ) {
-      // Merge the two text nodes
-      const mergedText: TextNode = {
-        ...previous,
-        text: previous.text + normalizedChild.text,
-      }
-
-      nextMap[prevKey] = mergedText
-
-      // Remove the current node
-      delete nextMap[childKey]
-    } else {
-      normalizedChildren.push(childKey)
-    }
-  }
-
-  nextMap[parentKey] = {
-    ...parent,
-    children: normalizedChildren,
-  }
-
-  return nextMap
-}
+export const createKey = (prefix: string) => `${prefix}-${crypto.randomUUID()}`

@@ -41,7 +41,7 @@ export type EditorNode = ElementNode | TextNode
 
 export type NodeMap = Record<NodeKey, EditorNode>
 
-interface EditorSelection {
+export interface EditorSelection {
   anchorNode: EditorNode | null
   anchorOffset: number
   focusNode: EditorNode | null
