@@ -7,13 +7,14 @@ interface UseSelectionInterface {
   setState: Dispatch<SetStateAction<EditorState>>
 }
 
-const findNearestElementNode = (
-  node: Node | null,
-  editorElement: HTMLDivElement
-): HTMLElement | null => {
+const getEditorLeaf = (node: Node | null): HTMLElement | null => {
   if (!node) return null
-  if (node.parentElement === editorElement) return node.parentElement
-  return findNearestElementNode(node.parentElement, editorElement)
+
+  const element: Node | null =
+    node.nodeType === Node.TEXT_NODE ? node.parentElement : node
+
+  if (!element || !(element instanceof HTMLElement)) return null
+  return element.closest<HTMLElement>('[data-editor-leaf]')
 }
 
 const domToEditorSelection = (
@@ -29,20 +30,19 @@ const domToEditorSelection = (
     editorElement.contains(selection?.focusNode)
   if (!isInsidetheEditor) return
 
-  const nearestAnchoreNode = findNearestElementNode(
-    selection?.anchorNode,
-    editorElement
-  )
-  const nearestFocusNode = findNearestElementNode(
-    selection?.focusNode,
-    editorElement
-  )
+  const nearestAnchoreNode = getEditorLeaf(selection?.anchorNode)
+  const nearestFocusNode = getEditorLeaf(selection?.focusNode)
 
-  console.log(selection?.anchorNode, editorElement, 'near element')
+  const anchorNodeKey = nearestAnchoreNode?.getAttribute('data-node-key')
+  const focusNodeKey = nearestFocusNode?.getAttribute('data-node-key')
 
-  if (!nearestAnchoreNode || !nearestFocusNode) return
-
-  return state.selection
+  return {
+    anchorNode: anchorNodeKey ? state.nodeMap[anchorNodeKey] : null,
+    anchorOffset: selection.anchorOffset,
+    focusNode: focusNodeKey ? state.nodeMap[focusNodeKey] : null,
+    focusOffset: selection.focusOffset,
+    type: (selection.type as 'caret' | 'range') ?? 'caret',
+  }
 }
 
 export const useSelection = ({
