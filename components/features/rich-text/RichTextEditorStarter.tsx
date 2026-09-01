@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { createEmptyState, isElementNode } from './helper/nodeUtils'
+import { createInitState, isElementNode } from './helper/nodeUtils'
 import { EditorState } from './type/schema'
 import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
@@ -9,7 +9,7 @@ import { useSelection } from './hooks/useSelection'
 
 export function RichTextEditorStarter() {
   const [state, setState] = useState<EditorState>(() =>
-    normalizeDocument(createEmptyState())
+    normalizeDocument(createInitState())
   )
 
   const once = normalizeDocument(state)

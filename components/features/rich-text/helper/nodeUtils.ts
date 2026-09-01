@@ -3,14 +3,13 @@ import {
   EditorState,
   ElementNode,
   Mark,
-  NodeKey,
   NodeMap,
   RootNode,
   TextNode,
 } from '../type/schema'
 
 // Can't use the crypto.randomUUID() on initial render as it cause the hydration error
-export const createEmptyState = (): EditorState => {
+export const createInitState = (): EditorState => {
   const rootKey = 'root-key'
   const paragraphKey = 'paragraph-key'
 
@@ -30,30 +29,28 @@ export const createEmptyState = (): EditorState => {
     't-empty': {
       type: 'text',
       key: 't-empty',
-      parent: 'p-1',
+      parent: paragraphKey,
       text: '',
       marks: [],
     },
-    // 2. A valid text node with a mark
     't-1': {
       type: 'text',
       key: 't-1',
-      parent: 'p-1',
+      parent: paragraphKey,
       text: 'Hello ',
       marks: ['bold'],
     },
-    // 3. Another valid text node with the same mark (eventually you'll merge these!)
     't-2': {
       type: 'text',
       key: 't-2',
-      parent: 'p-1',
+      parent: paragraphKey,
       text: 'world',
       marks: ['bold'],
     },
     't-3': {
       type: 'text',
       key: 't-3',
-      parent: 'p-1',
+      parent: paragraphKey,
       text: ' people',
       marks: ['italic'],
     },
