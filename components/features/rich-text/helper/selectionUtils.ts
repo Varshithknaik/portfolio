@@ -1,5 +1,7 @@
 import { EditorNode, EditorSelection, EditorState } from '../type/schema'
 
+const leafMap = new Map()
+
 const getEditorLeaf = (node: Node | null): HTMLElement | null => {
   if (!node) return null
 
@@ -10,33 +12,48 @@ const getEditorLeaf = (node: Node | null): HTMLElement | null => {
   return element.closest<HTMLElement>('[data-editor-leaf]')
 }
 
-const leafMap = new Map()
+const findTextNode = (element: HTMLElement): Text | null => {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+
+  return walker.nextNode() as Text | null
+}
 
 const findDomTextNode = (
-  editorElememt: HTMLElement,
+  editorElement: HTMLElement,
   node: EditorNode | null
 ) => {
   if (!node) return null
 
-  if (leafMap.has(node.key)) {
-    return leafMap.get(node.key)
+  const cachedElement = leafMap.get(node.key)
+
+  if (cachedElement && editorElement.contains(cachedElement)) {
+    return cachedElement
   }
+
+  leafMap.delete(node.key)
 
   // lets just focus on the text-node
-  const element = editorElememt.querySelector(
-    '[data-editor-leaf="' + node.key + '"]'
+  const leafElement = editorElement.querySelector<HTMLElement>(
+    `[data-editor-leaf="${node.key}"]`
   )
-  //  ||
-  // editorElememt.querySelector('[data-editor-element-key="' + node.key + '"]')
 
-  if (!element) return null
+  if (!leafElement) return null
 
-  if (element instanceof HTMLElement && element.dataset.editorLeaf) {
-    leafMap.set(element.dataset.editorLeaf, element)
-    return element
-  }
+  const textNode = findTextNode(leafElement)
 
-  return null
+  if (!textNode) return null
+
+  leafMap.set(node.key, textNode)
+  return textNode
+}
+
+const getLeafOffset = (leaf: HTMLElement, domNode: Node, domOffset: number) => {
+  //
+  const range = leaf.ownerDocument.createRange()
+  range.setStart(leaf, 0)
+  range.setEnd(domNode, domOffset)
+
+  return range.toString().length
 }
 
 export const domToEditorSelection = (
@@ -62,11 +79,23 @@ export const domToEditorSelection = (
 
   if (!anchorNodeKey || !focusNodeKey) return null
 
+  const anchorOffset = getLeafOffset(
+    nearestAnchoreNode,
+    selection.anchorNode!,
+    selection.anchorOffset
+  )
+
+  const focusOffset = getLeafOffset(
+    nearestFocusNode,
+    selection.focusNode!,
+    selection.focusOffset
+  )
+
   return {
     anchorNode: anchorNodeKey ? state.nodeMap[anchorNodeKey] : null,
-    anchorOffset: selection.anchorOffset,
+    anchorOffset: anchorOffset,
     focusNode: focusNodeKey ? state.nodeMap[focusNodeKey] : null,
-    focusOffset: selection.focusOffset,
+    focusOffset: focusOffset,
     type: (selection.type as 'caret' | 'range') ?? 'caret',
   }
 }

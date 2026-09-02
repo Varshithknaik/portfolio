@@ -1,6 +1,9 @@
-import { Dispatch, SetStateAction, useEffect } from 'react'
+import { Dispatch, SetStateAction, useEffect, useLayoutEffect } from 'react'
 import { EditorState } from '../type/schema'
-import { domToEditorSelection } from '../helper/selectionUtils'
+import {
+  domToEditorSelection,
+  editorSelectionToDom,
+} from '../helper/selectionUtils'
 
 interface UseSelectionInterface {
   editorElement: React.RefObject<HTMLDivElement>
@@ -31,4 +34,11 @@ export const useSelection = ({
       document.removeEventListener('selectionchange', handleSelection)
     }
   }, [editorElement, setState, state])
+
+  useLayoutEffect(() => {
+    const editor = editorElement?.current
+    if (!editor) return
+
+    editorSelectionToDom(editor, state.selection)
+  }, [editorElement, state.selection])
 }
