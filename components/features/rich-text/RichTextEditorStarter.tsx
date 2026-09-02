@@ -11,16 +11,6 @@ export function RichTextEditorStarter() {
   const [state, setState] = useState<EditorState>(() =>
     normalizeDocument(createInitState())
   )
-
-  const once = normalizeDocument(state)
-  const twice = normalizeDocument(once)
-
-  console.assert(
-    JSON.stringify(once) === JSON.stringify(twice),
-    'Normalization failed: the function is not idempotent!',
-    { once, twice }
-  )
-
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

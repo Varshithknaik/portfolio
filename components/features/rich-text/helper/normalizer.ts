@@ -29,11 +29,12 @@ export function normalizeTextChildren(
 
     // Preserve the invalid text nodes
     if (!isTextNode(child)) {
-      nextMap[childKey] = {
-        ...child,
-        parent: parentKey,
-      }
-      normalizedChildren.push(childKey)
+      // nextMap[childKey] = {
+      //   ...child,
+      //   parent: parentKey,
+      // }
+      // normalizedChildren.push(childKey)
+      delete nextMap[childKey]
       continue
     }
 

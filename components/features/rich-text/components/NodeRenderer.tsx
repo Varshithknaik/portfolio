@@ -35,7 +35,7 @@ export const NodeRenderer = ({ state, nodeKey }: NodeRendererProps) => {
           return <strong>{acc}</strong>
         }
         if (mark === 'italic') {
-          return <i>{acc}</i>
+          return <em>{acc}</em>
         }
         if (mark === 'underline') {
           return <u>{acc}</u>

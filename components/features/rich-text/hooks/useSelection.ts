@@ -3,6 +3,7 @@ import { EditorState } from '../type/schema'
 import {
   domToEditorSelection,
   editorSelectionToDom,
+  sameEditorSelection,
 } from '../helper/selectionUtils'
 
 interface UseSelectionInterface {
@@ -25,7 +26,10 @@ export const useSelection = ({
 
       if (!nextSelection) return
 
-      setState((prev) => ({ ...prev, selection: nextSelection }))
+      setState((prev) => {
+        if (sameEditorSelection(prev.selection, nextSelection)) return prev
+        return { ...prev, selection: nextSelection }
+      })
     }
 
     document.addEventListener('selectionchange', handleSelection)

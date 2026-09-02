@@ -131,3 +131,18 @@ export const editorSelectionToDom = (
     focusOffset
   )
 }
+
+export const sameEditorSelection = (
+  a?: EditorSelection | null | undefined,
+  b?: EditorSelection | null | undefined
+): boolean => {
+  if (a == null || b == null) {
+    return a == null && b == null
+  }
+  if (a?.type !== b?.type) return false
+  if (a?.anchorNode?.key !== b?.anchorNode?.key) return false
+  if (a?.anchorOffset !== b?.anchorOffset) return false
+  if (a?.focusNode?.key !== b?.focusNode?.key) return false
+  if (a?.focusOffset !== b?.focusOffset) return false
+  return true
+}
