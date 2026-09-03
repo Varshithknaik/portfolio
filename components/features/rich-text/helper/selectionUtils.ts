@@ -96,7 +96,7 @@ export const domToEditorSelection = (
     anchorOffset: anchorOffset,
     focusNode: focusNodeKey ? state.nodeMap[focusNodeKey] : null,
     focusOffset: focusOffset,
-    type: (selection.type as 'caret' | 'range') ?? 'caret',
+    type: (selection.type.toLowerCase() as 'caret' | 'range') ?? 'caret',
   }
 }
 

@@ -54,3 +54,9 @@ export interface EditorState {
   rootKey: NodeKey
   selection: EditorSelection | null
 }
+
+export type Transaction = {
+  type: 'insertText'
+  text: string
+  origin: 'keyboard'
+}

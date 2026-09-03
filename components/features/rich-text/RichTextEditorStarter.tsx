@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { KeyboardEventHandler, useEffect, useRef, useState } from 'react'
 import { createInitState, isElementNode } from './helper/nodeUtils'
-import { EditorState } from './type/schema'
+import { EditorState, Transaction } from './type/schema'
 import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
 import { useSelection } from './hooks/useSelection'
+import { applyTransaction } from './helper/transaction'
 
 export function RichTextEditorStarter() {
   const [state, setState] = useState<EditorState>(() =>
@@ -13,12 +14,47 @@ export function RichTextEditorStarter() {
   )
   const editorRef = useRef<HTMLDivElement>(null)
 
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    const isModifier = event.metaKey || event.ctrlKey
+    const key = event.key.toLowerCase()
+
+    if (
+      event.key === 'Backspace' ||
+      event.key === 'Delete' ||
+      (isModifier && ['b', 'i', 'u', 'z', 'k', 'd', 'x', 'v'].includes(key))
+    ) {
+      event.preventDefault()
+    }
+  }
+
   useEffect(() => {
     const editor = editorRef.current
     if (!editor) return
 
-    const handleBeforeInput = (event: Event) => {
-      console.log(event)
+    const handleBeforeInput = (event: InputEvent) => {
+      if (event.inputType === 'insertText') {
+        const transaction: Transaction = {
+          type: 'insertText',
+          text: event.data ?? '',
+          origin: 'keyboard',
+        }
+
+        const result = applyTransaction(state, transaction)
+        if (!result) {
+          event.preventDefault()
+          return
+        }
+
+        setState((prev) => ({
+          ...prev,
+          nodeMap: result?.nodeMap ?? prev.nodeMap,
+          selection: result?.selection ?? prev.selection,
+        }))
+      } else {
+        return
+      }
+
+      event.stopPropagation()
     }
     editor.addEventListener('beforeinput', handleBeforeInput, {
       passive: false,
@@ -27,7 +63,7 @@ export function RichTextEditorStarter() {
     return () => {
       editor.removeEventListener('beforeinput', handleBeforeInput)
     }
-  }, [])
+  }, [state])
 
   useSelection({
     editorElement: editorRef,
@@ -46,6 +82,7 @@ export function RichTextEditorStarter() {
       ref={editorRef}
       contentEditable
       suppressContentEditableWarning
+      onKeyDown={handleKeyDown}
       onBeforeInput={(e) => {
         e.preventDefault()
       }}
