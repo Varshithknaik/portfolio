@@ -55,8 +55,14 @@ export interface EditorState {
   selection: EditorSelection | null
 }
 
-export type Transaction = {
-  type: 'insertText'
-  text: string
-  origin: 'keyboard'
-}
+export type Transaction =
+  | {
+      type: 'insertText'
+      text: string
+      origin: 'keyboard'
+    }
+  | {
+      type: 'deleteText'
+      text: string
+      origin: 'keyboard'
+    }

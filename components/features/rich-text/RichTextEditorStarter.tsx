@@ -13,16 +13,21 @@ export function RichTextEditorStarter() {
     normalizeDocument(createInitState())
   )
   const editorRef = useRef<HTMLDivElement>(null)
+  const periodKeyPressed = useRef<boolean>(false)
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    console.log({
+      key: JSON.stringify(event.key),
+      code: event.code,
+    })
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
 
-    if (
-      event.key === 'Backspace' ||
-      event.key === 'Delete' ||
-      (isModifier && ['b', 'i', 'u', 'z', 'k', 'd', 'x', 'v'].includes(key))
-    ) {
+    if (event.code.toLowerCase() === 'period') {
+      periodKeyPressed.current = true
+    }
+
+    if (isModifier && ['b', 'i', 'u', 'z', 'k', 'd', 'x', 'v'].includes(key)) {
       event.preventDefault()
     }
   }
@@ -32,29 +37,53 @@ export function RichTextEditorStarter() {
     if (!editor) return
 
     const handleBeforeInput = (event: InputEvent) => {
-      if (event.inputType === 'insertText') {
-        const transaction: Transaction = {
-          type: 'insertText',
-          text: event.data ?? '',
-          origin: 'keyboard',
-        }
+      console.log({
+        inputType: event.inputType,
+        data: JSON.stringify(event.data),
+        isComposing: event.isComposing,
+      })
 
-        const result = applyTransaction(state, transaction)
-        if (!result) {
-          event.preventDefault()
-          return
-        }
+      const isDoubleSpacePeriod =
+        (event.inputType === 'insertText' ||
+          event.inputType === 'insertReplacementText') &&
+        (event.data === '. ' ||
+          (event.data?.trim() === '.' && !periodKeyPressed.current))
 
-        setState((prev) => ({
-          ...prev,
-          nodeMap: result?.nodeMap ?? prev.nodeMap,
-          selection: result?.selection ?? prev.selection,
-        }))
-      } else {
+      if (
+        event.inputType !== 'insertText' &&
+        event.inputType !== 'deleteContentBackward' &&
+        event.inputType !== 'insertReplacementText'
+      ) {
         return
       }
 
-      event.stopPropagation()
+      event.preventDefault()
+
+      periodKeyPressed.current = false
+
+      const insertData = isDoubleSpacePeriod ? ' ' : (event.data ?? '')
+
+      const transaction: Transaction = {
+        type:
+          event.inputType === 'deleteContentBackward'
+            ? 'deleteText'
+            : 'insertText',
+        text: event.inputType === 'deleteContentBackward' ? '' : insertData,
+        origin: 'keyboard',
+      }
+
+      const result = applyTransaction(state, transaction)
+
+      if (!result) {
+        event.preventDefault()
+        return
+      }
+
+      setState((prev) => ({
+        ...prev,
+        nodeMap: result.nodeMap,
+        selection: result.selection,
+      }))
     }
     editor.addEventListener('beforeinput', handleBeforeInput, {
       passive: false,
@@ -82,11 +111,12 @@ export function RichTextEditorStarter() {
       ref={editorRef}
       contentEditable
       suppressContentEditableWarning
+      autoCorrect="off"
+      spellCheck={false}
+      autoCapitalize="off"
+      data-gramm="false"
       onKeyDown={handleKeyDown}
-      onBeforeInput={(e) => {
-        e.preventDefault()
-      }}
-      className="surface-card p-3 md:p-5  max-w-none text-black dark:text-white focus:outline-none"
+      className="surface-card p-3 md:p-5  max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap"
     >
       {root.children.map((childKey) => {
         const node = state.nodeMap[childKey]
