@@ -15,7 +15,7 @@ export function applyTransaction(
       return replaceTextSelection(state, transaction.text)
     }
     case 'deleteText': {
-      return replaceTextSelection(state, '')
+      return deleteTextSelection(state)
     }
 
     default:
@@ -23,7 +23,13 @@ export function applyTransaction(
   }
 }
 
-const replaceTextSelection = (state: EditorState, text: string) => {
+type TextRange = {
+  node: TextNode
+  startOffset: number
+  endOffset: number
+}
+
+const getSingleTextRange = (state: EditorState): TextRange | null => {
   const { selection, nodeMap } = state
 
   if (!selection) return null
@@ -33,7 +39,6 @@ const replaceTextSelection = (state: EditorState, text: string) => {
   if (!anchorNode || !isTextNode(anchorNode)) return null
   if (!focusNode || !isTextNode(focusNode)) return null
 
-  //lets worry on the single text node and left to right selection
   const currentTextNodeKey = anchorNode.key
   const currentTextNode = nodeMap[currentTextNodeKey]
 
@@ -42,19 +47,30 @@ const replaceTextSelection = (state: EditorState, text: string) => {
   const startOffset = Math.min(anchorOffset, focusOffset)
   const endOffset = Math.max(anchorOffset, focusOffset)
 
+  return {
+    node: currentTextNode,
+    startOffset,
+    endOffset,
+  }
+}
+
+const replaceTextRange = (
+  state: EditorState,
+  range: TextRange,
+  replacementText: string
+): EditorState => {
+  const { node: textNode, startOffset, endOffset } = range
   const newText =
-    anchorNode.text.slice(0, startOffset) +
-    text +
-    anchorNode.text.slice(endOffset)
+    textNode.text.slice(0, startOffset) +
+    replacementText +
+    textNode.text.slice(endOffset)
 
   const updatedTextNode: TextNode = {
-    ...currentTextNode,
+    ...textNode,
     text: newText,
   }
 
-  // Lets normalize the text node later
-
-  const nextOffset = anchorOffset + text.length
+  const nextOffset = startOffset + replacementText.length
 
   const nextSelection: EditorSelection = {
     anchorNode: updatedTextNode,
@@ -64,14 +80,43 @@ const replaceTextSelection = (state: EditorState, text: string) => {
     type: 'caret',
   }
 
-  const newNodeMap = {
-    ...nodeMap,
-    [currentTextNodeKey]: updatedTextNode,
-  }
-
   return {
     ...state,
-    nodeMap: newNodeMap,
+    nodeMap: {
+      ...state.nodeMap,
+      [textNode.key]: updatedTextNode,
+    },
     selection: nextSelection,
   }
+}
+
+const replaceTextSelection = (
+  state: EditorState,
+  text: string
+): EditorState | null => {
+  const textRange = getSingleTextRange(state)
+
+  if (!textRange) return null
+
+  return replaceTextRange(state, textRange, text)
+}
+
+const deleteTextSelection = (state: EditorState): EditorState | null => {
+  const textRange = getSingleTextRange(state)
+
+  if (!textRange) return null
+
+  const { startOffset, endOffset } = textRange
+
+  const deleteStart =
+    startOffset === endOffset ? Math.max(0, startOffset - 1) : startOffset
+
+  return replaceTextRange(
+    state,
+    {
+      ...textRange,
+      startOffset: deleteStart,
+    },
+    ''
+  )
 }
