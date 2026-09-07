@@ -16,10 +16,6 @@ export function RichTextEditorStarter() {
   const periodKeyPressed = useRef<boolean>(false)
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    console.log({
-      key: JSON.stringify(event.key),
-      code: event.code,
-    })
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
 
@@ -37,12 +33,6 @@ export function RichTextEditorStarter() {
     if (!editor) return
 
     const handleBeforeInput = (event: InputEvent) => {
-      console.log({
-        inputType: event.inputType,
-        data: JSON.stringify(event.data),
-        isComposing: event.isComposing,
-      })
-
       const isDoubleSpacePeriod =
         (event.inputType === 'insertText' ||
           event.inputType === 'insertReplacementText') &&
@@ -73,6 +63,8 @@ export function RichTextEditorStarter() {
       }
 
       const result = applyTransaction(state, transaction)
+
+      console.log(result, 'result')
 
       if (!result) {
         event.preventDefault()

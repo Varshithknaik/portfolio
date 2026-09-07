@@ -5,6 +5,7 @@ import {
   Transaction,
 } from '../type/schema'
 import { isTextNode } from './nodeUtils'
+import { normalizeDocument, normalizeTextChildren } from './normalizer'
 
 export function applyTransaction(
   state: EditorState,
@@ -29,15 +30,29 @@ type TextRange = {
   endOffset: number
 }
 
-const getSingleTextRange = (state: EditorState): TextRange | null => {
+const getTextRange = (state: EditorState): TextRange | null => {
   const { selection, nodeMap } = state
 
   if (!selection) return null
 
   const { anchorNode, anchorOffset, focusOffset, focusNode } = selection
 
-  if (!anchorNode || !isTextNode(anchorNode)) return null
-  if (!focusNode || !isTextNode(focusNode)) return null
+  if (!anchorNode || !focusNode) return null
+
+  // get the node from the nodeMap
+  const currentAnchor = nodeMap[anchorNode.key]
+  const currentFocus = nodeMap[focusNode.key]
+
+  if (
+    !currentAnchor ||
+    !currentFocus ||
+    !isTextNode(currentAnchor) ||
+    !isTextNode(currentFocus)
+  ) {
+    return null
+  }
+
+  if (anchorNode.parent !== focusNode.parent) return null
 
   const currentTextNodeKey = anchorNode.key
   const currentTextNode = nodeMap[currentTextNodeKey]
@@ -80,21 +95,25 @@ const replaceTextRange = (
     type: 'caret',
   }
 
-  return {
+  const nextNodeMap = {
+    ...state.nodeMap,
+    [textNode.key]: updatedTextNode,
+  }
+
+  const nextState = {
     ...state,
-    nodeMap: {
-      ...state.nodeMap,
-      [textNode.key]: updatedTextNode,
-    },
+    nodeMap: nextNodeMap,
     selection: nextSelection,
   }
+
+  return normalizeDocument(nextState)
 }
 
 const replaceTextSelection = (
   state: EditorState,
   text: string
 ): EditorState | null => {
-  const textRange = getSingleTextRange(state)
+  const textRange = getTextRange(state)
 
   if (!textRange) return null
 
@@ -102,7 +121,7 @@ const replaceTextSelection = (
 }
 
 const deleteTextSelection = (state: EditorState): EditorState | null => {
-  const textRange = getSingleTextRange(state)
+  const textRange = getTextRange(state)
 
   if (!textRange) return null
 
