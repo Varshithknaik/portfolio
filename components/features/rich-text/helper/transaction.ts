@@ -5,7 +5,10 @@ import {
   Transaction,
 } from '../type/schema'
 import { isTextNode } from './nodeUtils'
-import { normalizeDocument, normalizeTextChildren } from './normalizer'
+import {
+  normalizeDocument,
+  remapSelectionAfterNormalization,
+} from './normalizer'
 
 export function applyTransaction(
   state: EditorState,
@@ -106,7 +109,8 @@ const replaceTextRange = (
     selection: nextSelection,
   }
 
-  return normalizeDocument(nextState)
+  const normalizedState = normalizeDocument(nextState)
+  return remapSelectionAfterNormalization(nextState, normalizedState)
 }
 
 const replaceTextSelection = (

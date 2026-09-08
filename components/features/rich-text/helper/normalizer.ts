@@ -131,3 +131,86 @@ export function normalizeDocument(state: EditorState): EditorState {
 
   return { ...state, nodeMap: nextMap }
 }
+
+export function remapSelectionAfterNormalization(
+  before: EditorState,
+  after: EditorState
+): EditorState {
+  if (!before.selection) return after
+
+  const selectedKey = before.selection.anchorNode?.key
+  const survivingNode = after.nodeMap[selectedKey!]
+
+  if (survivingNode && isTextNode(survivingNode)) {
+    const offset = Math.min(
+      before.selection.anchorOffset,
+      survivingNode.text.length
+    )
+
+    return {
+      ...after,
+      selection: {
+        anchorNode: survivingNode,
+        anchorOffset: offset,
+        focusNode: survivingNode,
+        focusOffset: offset,
+        type: 'caret',
+      },
+    }
+  }
+
+  // normalization removed the node that was selected
+  const oldNode = before.nodeMap[selectedKey!]
+
+  if (!oldNode || !oldNode.parent) return after
+
+  const oldParent = before.nodeMap[oldNode.parent]
+  const newParent = after.nodeMap[oldNode.parent]
+
+  if (
+    !oldParent ||
+    !newParent ||
+    !isElementNode(oldParent) ||
+    !isElementNode(newParent)
+  ) {
+    return after
+  }
+
+  const oldIndex = oldParent.children.indexOf(selectedKey!)
+  if (oldIndex < 0) return after
+
+  for (let idx = oldIndex - 1; idx >= 0; idx--) {
+    const previous = after.nodeMap[oldParent.children[idx]]
+    if (previous && isTextNode(previous)) {
+      return {
+        ...after,
+        selection: {
+          anchorNode: previous,
+          anchorOffset: previous.text.length,
+          focusNode: previous,
+          focusOffset: previous.text.length,
+          type: 'caret',
+        },
+      }
+    }
+  }
+
+  for (let idx = oldIndex + 1; idx < oldParent.children.length; idx++) {
+    const next = after.nodeMap[oldParent.children[idx]]
+
+    if (next && isTextNode(next)) {
+      return {
+        ...after,
+        selection: {
+          anchorNode: next,
+          anchorOffset: 0,
+          focusNode: next,
+          focusOffset: 0,
+          type: 'caret',
+        },
+      }
+    }
+  }
+
+  return after
+}
