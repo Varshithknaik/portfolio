@@ -181,14 +181,7 @@ const replaceTextRange = (
     },
   }
 
-  const newParentNode = nextNodeMap[parentNode.key]
-
-  if (!isElementNode(newParentNode)) return state
-
-  const removedKeys = newParentNode.children.slice(
-    start.index + 1,
-    end.index + 1
-  )
+  const removedKeys = parentNode.children.slice(start.index + 1, end.index + 1)
   for (const key of removedKeys) {
     delete nextNodeMap[key]
   }

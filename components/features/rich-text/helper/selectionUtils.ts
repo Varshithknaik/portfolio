@@ -23,7 +23,6 @@ const findDomTextNode = (
   node: EditorNode | null
 ) => {
   if (!node) return null
-
   const cachedElement = leafMap.get(node.key)
 
   if (cachedElement && editorElement.contains(cachedElement)) {
