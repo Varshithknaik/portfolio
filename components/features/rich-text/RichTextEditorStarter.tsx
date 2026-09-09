@@ -32,6 +32,7 @@ export function RichTextEditorStarter() {
     const editor = editorRef.current
     if (!editor) return
 
+    // TODO: No Need to handle the '. ' case since its device is insering it
     const handleBeforeInput = (event: InputEvent) => {
       const isDoubleSpacePeriod =
         (event.inputType === 'insertText' ||

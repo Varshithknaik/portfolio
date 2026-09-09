@@ -1,10 +1,11 @@
 import {
   EditorSelection,
   EditorState,
+  ElementNode,
   TextNode,
   Transaction,
 } from '../type/schema'
-import { isTextNode } from './nodeUtils'
+import { createKey, isElementNode, isTextNode } from './nodeUtils'
 import {
   normalizeDocument,
   remapSelectionAfterNormalization,
@@ -27,10 +28,17 @@ export function applyTransaction(
   }
 }
 
-type TextRange = {
+type TextPoint = {
   node: TextNode
-  startOffset: number
-  endOffset: number
+  offset: number
+  index: number
+}
+
+type TextRange = {
+  parentNode: ElementNode
+  start: TextPoint
+  end: TextPoint
+  backward: boolean
 }
 
 const getTextRange = (state: EditorState): TextRange | null => {
@@ -38,37 +46,92 @@ const getTextRange = (state: EditorState): TextRange | null => {
 
   if (!selection) return null
 
-  const { anchorNode, anchorOffset, focusOffset, focusNode } = selection
+  const anchorNodeKey = selection.anchorNode?.key
+  const focusNodeKey = selection.focusNode?.key
+
+  if (!anchorNodeKey || !focusNodeKey) return null
+
+  const anchorNode = nodeMap[anchorNodeKey]
+  const focusNode = nodeMap[focusNodeKey]
 
   if (!anchorNode || !focusNode) return null
 
-  // get the node from the nodeMap
-  const currentAnchor = nodeMap[anchorNode.key]
-  const currentFocus = nodeMap[focusNode.key]
-
   if (
-    !currentAnchor ||
-    !currentFocus ||
-    !isTextNode(currentAnchor) ||
-    !isTextNode(currentFocus)
+    !anchorNode ||
+    !focusNode ||
+    !isTextNode(anchorNode) ||
+    !isTextNode(focusNode)
   ) {
     return null
   }
 
-  if (anchorNode.parent !== focusNode.parent) return null
+  if (!anchorNode.parent || anchorNode.parent !== focusNode.parent) return null
 
-  const currentTextNodeKey = anchorNode.key
-  const currentTextNode = nodeMap[currentTextNodeKey]
+  const parentNode = nodeMap[anchorNode.parent]
+  if (!parentNode || !isElementNode(parentNode)) return null
 
-  if (!currentTextNode || !isTextNode(currentTextNode)) return null
+  const indexOfAnchor = parentNode.children.indexOf(anchorNode.key)
+  const indexOfFocus = parentNode.children.indexOf(focusNode.key)
 
-  const startOffset = Math.min(anchorOffset, focusOffset)
-  const endOffset = Math.max(anchorOffset, focusOffset)
+  if (indexOfAnchor === -1 || indexOfFocus === -1) return null
+
+  const { anchorOffset, focusOffset } = selection
+
+  const isValidAnchorOffset =
+    anchorOffset >= 0 && anchorOffset <= anchorNode.text.length
+
+  const isValidFocusOffset =
+    focusOffset >= 0 && focusOffset <= focusNode.text.length
+
+  if (!isValidAnchorOffset || !isValidFocusOffset) return null
+
+  const affectedKeys = parentNode.children.slice(
+    Math.min(indexOfAnchor, indexOfFocus),
+    Math.max(indexOfAnchor, indexOfFocus) + 1
+  )
+
+  if (
+    affectedKeys.some((key) => {
+      const node = nodeMap[key]
+      return !node || !isTextNode(node)
+    })
+  ) {
+    return null
+  }
+
+  const isAnchorBeforeFocus =
+    indexOfAnchor < indexOfFocus ||
+    (indexOfAnchor === indexOfFocus && anchorOffset <= focusOffset)
+
+  const start: TextPoint = isAnchorBeforeFocus
+    ? {
+        node: anchorNode,
+        index: indexOfAnchor,
+        offset: anchorOffset,
+      }
+    : {
+        node: focusNode,
+        index: indexOfFocus,
+        offset: focusOffset,
+      }
+
+  const end: TextPoint = isAnchorBeforeFocus
+    ? {
+        node: focusNode,
+        index: indexOfFocus,
+        offset: focusOffset,
+      }
+    : {
+        node: anchorNode,
+        index: indexOfAnchor,
+        offset: anchorOffset,
+      }
 
   return {
-    node: currentTextNode,
-    startOffset,
-    endOffset,
+    parentNode,
+    start,
+    end,
+    backward: isAnchorBeforeFocus,
   }
 }
 
@@ -77,22 +140,32 @@ const replaceTextRange = (
   range: TextRange,
   replacementText: string
 ): EditorState => {
-  const { node: textNode, startOffset, endOffset } = range
-  const newText =
-    textNode.text.slice(0, startOffset) +
-    replacementText +
-    textNode.text.slice(endOffset)
+  const { start, end, parentNode } = range
+  const startPrefix = start.node.text.slice(0, start.offset)
+  const endSuffix = end.node.text.slice(end.offset)
 
-  const updatedTextNode: TextNode = {
-    ...textNode,
-    text: newText,
+  const updatedStartNode: TextNode = {
+    ...start.node,
+    text: startPrefix + replacementText,
+  }
+  const newEndNodeKey = createKey('t')
+  const updatedEndNode: TextNode = {
+    ...end.node,
+    key: newEndNodeKey,
+    text: endSuffix,
   }
 
-  const nextOffset = startOffset + replacementText.length
+  const nextChildren = [
+    ...parentNode.children.slice(0, start.index + 1),
+    newEndNodeKey,
+    ...parentNode.children.slice(end.index + 1),
+  ]
+
+  const nextOffset = startPrefix.length + replacementText.length
 
   const nextSelection: EditorSelection = {
-    anchorNode: updatedTextNode,
-    focusNode: updatedTextNode,
+    anchorNode: updatedStartNode,
+    focusNode: updatedStartNode,
     anchorOffset: nextOffset,
     focusOffset: nextOffset,
     type: 'caret',
@@ -100,7 +173,24 @@ const replaceTextRange = (
 
   const nextNodeMap = {
     ...state.nodeMap,
-    [textNode.key]: updatedTextNode,
+    [start.node.key]: updatedStartNode,
+    [newEndNodeKey]: updatedEndNode,
+    [parentNode.key]: {
+      ...parentNode,
+      children: nextChildren,
+    },
+  }
+
+  const newParentNode = nextNodeMap[parentNode.key]
+
+  if (!isElementNode(newParentNode)) return state
+
+  const removedKeys = newParentNode.children.slice(
+    start.index + 1,
+    end.index + 1
+  )
+  for (const key of removedKeys) {
+    delete nextNodeMap[key]
   }
 
   const nextState = {
@@ -110,6 +200,7 @@ const replaceTextRange = (
   }
 
   const normalizedState = normalizeDocument(nextState)
+  console.log(normalizedState, nextState)
   return remapSelectionAfterNormalization(nextState, normalizedState)
 }
 
@@ -118,7 +209,7 @@ const replaceTextSelection = (
   text: string
 ): EditorState | null => {
   const textRange = getTextRange(state)
-
+  console.log(textRange, 'textRange')
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, text)
@@ -129,7 +220,10 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
 
   if (!textRange) return null
 
-  const { startOffset, endOffset } = textRange
+  const {
+    start: { offset: startOffset },
+    end: { offset: endOffset },
+  } = textRange
 
   const deleteStart =
     startOffset === endOffset ? Math.max(0, startOffset - 1) : startOffset
@@ -138,7 +232,6 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
     state,
     {
       ...textRange,
-      startOffset: deleteStart,
     },
     ''
   )
