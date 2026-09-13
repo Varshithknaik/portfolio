@@ -202,30 +202,67 @@ const replaceTextSelection = (
   text: string
 ): EditorState | null => {
   const textRange = getTextRange(state)
-  console.log(textRange, 'textRange')
   if (!textRange) return null
-
   return replaceTextRange(state, textRange, text)
 }
 
+const resolveBackwardDeletionRange = (state: EditorState): TextRange | null => {
+  const currentRange = getTextRange(state)
+
+  if (!currentRange) return null
+
+  const { start, end, parentNode } = currentRange
+
+  const isCollapsed =
+    start.node.key === end.node.key && start.offset === end.offset
+
+  if (!isCollapsed) return currentRange
+
+  // Need to set the backward
+
+  // simple case
+  if (start.offset > 0) {
+    return {
+      ...currentRange,
+      start: {
+        ...start,
+        offset: start.offset - 1,
+      },
+      backward: true,
+    }
+  }
+
+  // If not start.offset is is 0 select the previous child if present
+  for (let idx = start.index - 1; idx >= 0; idx--) {
+    const prevKey = parentNode.children[idx]
+    const prevNode = state.nodeMap[prevKey]
+
+    if (!prevNode || !isTextNode(prevNode)) return null
+    if (prevNode.text.length === 0) continue
+
+    return {
+      ...currentRange,
+      start: {
+        node: prevNode,
+        index: idx,
+        offset: prevNode.text.length - 1,
+      },
+      end: {
+        node: prevNode,
+        index: idx,
+        offset: prevNode.text.length,
+      },
+      backward: true,
+    }
+  }
+
+  return null
+}
+
 const deleteTextSelection = (state: EditorState): EditorState | null => {
-  const textRange = getTextRange(state)
+  const textRange = resolveBackwardDeletionRange(state)
 
   if (!textRange) return null
 
-  const {
-    start: { offset: startOffset },
-    end: { offset: endOffset },
-  } = textRange
-
-  const deleteStart =
-    startOffset === endOffset ? Math.max(0, startOffset - 1) : startOffset
-
-  return replaceTextRange(
-    state,
-    {
-      ...textRange,
-    },
-    ''
-  )
+  return replaceTextRange(state, textRange, '')
 }

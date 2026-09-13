@@ -66,6 +66,7 @@ export const domToEditorSelection = (
   const isInsidetheEditor =
     editorElement.contains(selection?.anchorNode) &&
     editorElement.contains(selection?.focusNode)
+
   if (!isInsidetheEditor) return null
 
   const nearestAnchoreNode = getEditorLeaf(selection?.anchorNode)

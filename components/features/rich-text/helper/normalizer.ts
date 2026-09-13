@@ -8,12 +8,17 @@ import {
   sameMarks,
 } from './nodeUtils'
 
+type NormalizeTextResult = {
+  nodeMap: NodeMap
+  createdPlaceholderKey?: string
+}
+
 export function normalizeTextChildren(
   nodeMap: NodeMap,
   parentKey: NodeKey
-): NodeMap {
+): NormalizeTextResult {
   const parent = nodeMap[parentKey]
-  if (!parent || !isElementNode(parent)) return nodeMap
+  if (!parent || !isElementNode(parent)) return { nodeMap }
 
   const nextMap: NodeMap = { ...nodeMap }
   const normalizedChildren: NodeKey[] = []
@@ -76,12 +81,32 @@ export function normalizeTextChildren(
     }
   }
 
+  if (normalizedChildren.length === 0) {
+    const textKey = createKey('text')
+    nextMap[textKey] = {
+      type: 'text',
+      key: textKey,
+      parent: parentKey,
+      text: '',
+      marks: [],
+    }
+    normalizedChildren.push(textKey)
+    nextMap[parentKey] = {
+      ...parent,
+      children: normalizedChildren,
+    }
+    return {
+      nodeMap: nextMap,
+      createdPlaceholderKey: textKey,
+    }
+  }
+
   nextMap[parentKey] = {
     ...parent,
     children: normalizedChildren,
   }
 
-  return nextMap
+  return { nodeMap: nextMap }
 }
 
 export function normalizeDocument(state: EditorState): EditorState {
@@ -96,8 +121,10 @@ export function normalizeDocument(state: EditorState): EditorState {
     return !!nodeMap[key]
   })
 
+  console.log(state)
   // rapair logic
   if (rootChildren.length === 0) {
+    console.log('repair logic added')
     const paragraphKey = createKey('paragraph')
     nextMap[paragraphKey] = {
       type: 'paragraph',
@@ -125,7 +152,24 @@ export function normalizeDocument(state: EditorState): EditorState {
     }
 
     if (isElementNode(child)) {
-      nextMap = normalizeTextChildren(nextMap, childKey)
+      const { nodeMap: newMap, createdPlaceholderKey } = normalizeTextChildren(
+        nextMap,
+        childKey
+      )
+      nextMap = newMap
+      if (createdPlaceholderKey) {
+        return {
+          ...state,
+          nodeMap: nextMap,
+          selection: {
+            anchorNode: nextMap[createdPlaceholderKey],
+            anchorOffset: 0,
+            focusNode: nextMap[createdPlaceholderKey],
+            focusOffset: 0,
+            type: 'caret',
+          },
+        }
+      }
     }
   }
 
@@ -139,6 +183,8 @@ export function remapSelectionAfterNormalization(
   if (!before.selection) return after
 
   const selectedKey = before.selection.anchorNode?.key
+  if (!selectedKey) return after
+
   const survivingNode = after.nodeMap[selectedKey!]
 
   if (survivingNode && isTextNode(survivingNode)) {
@@ -211,6 +257,22 @@ export function remapSelectionAfterNormalization(
       }
     }
   }
+
+  // if (newParent.children.length > 0) {
+  //   const prevNode = after.nodeMap[newParent.children[0]]
+  //   if (prevNode && isTextNode(prevNode)) {
+  //     return {
+  //       ...after,
+  //       selection: {
+  //         anchorNode: prevNode,
+  //         anchorOffset: prevNode.text.length,
+  //         focusNode: prevNode,
+  //         focusOffset: prevNode.text.length,
+  //         type: 'caret',
+  //       },
+  //     }
+  //   }
+  // }
 
   return after
 }

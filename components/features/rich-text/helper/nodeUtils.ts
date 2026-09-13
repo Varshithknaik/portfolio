@@ -45,7 +45,7 @@ export const createInitState = (): EditorState => {
       key: 't-2',
       parent: paragraphKey,
       text: 'world',
-      marks: ['bold'],
+      marks: [],
     },
     't-3': {
       type: 'text',

@@ -13,15 +13,10 @@ export function RichTextEditorStarter() {
     normalizeDocument(createInitState())
   )
   const editorRef = useRef<HTMLDivElement>(null)
-  const periodKeyPressed = useRef<boolean>(false)
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
-
-    if (event.code.toLowerCase() === 'period') {
-      periodKeyPressed.current = true
-    }
 
     if (isModifier && ['b', 'i', 'u', 'z', 'k', 'd', 'x', 'v'].includes(key)) {
       event.preventDefault()
@@ -32,14 +27,7 @@ export function RichTextEditorStarter() {
     const editor = editorRef.current
     if (!editor) return
 
-    // TODO: No Need to handle the '. ' case since its device is insering it
     const handleBeforeInput = (event: InputEvent) => {
-      const isDoubleSpacePeriod =
-        (event.inputType === 'insertText' ||
-          event.inputType === 'insertReplacementText') &&
-        (event.data === '. ' ||
-          (event.data?.trim() === '.' && !periodKeyPressed.current))
-
       if (
         event.inputType !== 'insertText' &&
         event.inputType !== 'deleteContentBackward' &&
@@ -50,9 +38,7 @@ export function RichTextEditorStarter() {
 
       event.preventDefault()
 
-      periodKeyPressed.current = false
-
-      const insertData = isDoubleSpacePeriod ? ' ' : (event.data ?? '')
+      const insertData = event.data ?? ''
 
       const transaction: Transaction = {
         type:
@@ -109,7 +95,7 @@ export function RichTextEditorStarter() {
       autoCapitalize="off"
       data-gramm="false"
       onKeyDown={handleKeyDown}
-      className="surface-card p-3 md:p-5  max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap"
+      className="surface-card p-3 md:p-5 min-h-[6rem] max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap"
     >
       {root.children.map((childKey) => {
         const node = state.nodeMap[childKey]
