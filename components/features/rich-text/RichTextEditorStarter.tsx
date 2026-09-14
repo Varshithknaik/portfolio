@@ -49,20 +49,7 @@ export function RichTextEditorStarter() {
         origin: 'keyboard',
       }
 
-      const result = applyTransaction(state, transaction)
-
-      console.log(result, 'result')
-
-      if (!result) {
-        event.preventDefault()
-        return
-      }
-
-      setState((prev) => ({
-        ...prev,
-        nodeMap: result.nodeMap,
-        selection: result.selection,
-      }))
+      setState((prev) => applyTransaction(prev, transaction) ?? prev)
     }
     editor.addEventListener('beforeinput', handleBeforeInput, {
       passive: false,

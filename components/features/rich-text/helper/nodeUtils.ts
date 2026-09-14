@@ -12,19 +12,26 @@ import {
 export const createInitState = (): EditorState => {
   const rootKey = 'root-key'
   const paragraphKey = 'paragraph-key'
+  const paragraphKey2 = 'paragraph-key-2'
 
   const nodeMap: NodeMap = {
     [rootKey]: {
       type: 'root',
       key: rootKey,
       parent: null,
-      children: [paragraphKey],
+      children: [paragraphKey, paragraphKey2],
     },
     [paragraphKey]: {
       type: 'paragraph',
       key: paragraphKey,
       parent: rootKey,
       children: ['t-empty', 't-1', 't-2', 't-3'],
+    },
+    [paragraphKey2]: {
+      type: 'paragraph',
+      key: paragraphKey2,
+      parent: rootKey,
+      children: ['t-1-2'],
     },
     't-empty': {
       type: 'text',
@@ -52,6 +59,13 @@ export const createInitState = (): EditorState => {
       key: 't-3',
       parent: paragraphKey,
       text: ' people',
+      marks: ['italic'],
+    },
+    't-1-2': {
+      type: 'text',
+      key: 't-1-2',
+      parent: paragraphKey2,
+      text: 'Varshith from diffrent paragraph',
       marks: ['italic'],
     },
   }

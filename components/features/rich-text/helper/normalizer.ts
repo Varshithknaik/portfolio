@@ -7,24 +7,33 @@ import {
   isTextNode,
   sameMarks,
 } from './nodeUtils'
+import { createCaretSelection } from './transaction'
 
-type NormalizeTextResult = {
-  nodeMap: NodeMap
-  createdPlaceholderKey?: string
+const removeNodeAndDescendents = (nodeMap: NodeMap, nodeKey: NodeKey) => {
+  const node = nodeMap[nodeKey]
+  if (!node) return
+
+  if (isElementNode(node)) {
+    for (const childKey of node.children) {
+      removeNodeAndDescendents(nodeMap, childKey)
+    }
+  }
+
+  delete nodeMap[nodeKey]
 }
 
 export function normalizeTextChildren(
   nodeMap: NodeMap,
   parentKey: NodeKey
-): NormalizeTextResult {
+): NodeMap {
   const parent = nodeMap[parentKey]
-  if (!parent || !isElementNode(parent)) return { nodeMap }
+  if (!parent || !isElementNode(parent)) return nodeMap
 
   const nextMap: NodeMap = { ...nodeMap }
   const normalizedChildren: NodeKey[] = []
 
   for (const childKey of parent.children) {
-    const child = nodeMap[childKey]
+    const child = nextMap[childKey]
 
     if (!child) continue
 
@@ -32,19 +41,13 @@ export function normalizeTextChildren(
       throw new Error('Root node should not be a child of any node')
     }
 
-    // Preserve the invalid text nodes
     if (!isTextNode(child)) {
-      // nextMap[childKey] = {
-      //   ...child,
-      //   parent: parentKey,
-      // }
-      // normalizedChildren.push(childKey)
-      delete nextMap[childKey]
+      removeNodeAndDescendents(nextMap, childKey)
       continue
     }
 
     if (child.text.length === 0) {
-      delete nextMap[childKey]
+      removeNodeAndDescendents(nextMap, childKey)
       continue
     }
 
@@ -95,10 +98,7 @@ export function normalizeTextChildren(
       ...parent,
       children: normalizedChildren,
     }
-    return {
-      nodeMap: nextMap,
-      createdPlaceholderKey: textKey,
-    }
+    return nextMap
   }
 
   nextMap[parentKey] = {
@@ -106,7 +106,7 @@ export function normalizeTextChildren(
     children: normalizedChildren,
   }
 
-  return { nodeMap: nextMap }
+  return nextMap
 }
 
 export function normalizeDocument(state: EditorState): EditorState {
@@ -121,10 +121,8 @@ export function normalizeDocument(state: EditorState): EditorState {
     return !!nodeMap[key]
   })
 
-  console.log(state)
   // rapair logic
   if (rootChildren.length === 0) {
-    console.log('repair logic added')
     const paragraphKey = createKey('paragraph')
     nextMap[paragraphKey] = {
       type: 'paragraph',
@@ -152,63 +150,36 @@ export function normalizeDocument(state: EditorState): EditorState {
     }
 
     if (isElementNode(child)) {
-      const { nodeMap: newMap, createdPlaceholderKey } = normalizeTextChildren(
-        nextMap,
-        childKey
-      )
+      const newMap = normalizeTextChildren(nextMap, childKey)
       nextMap = newMap
-      if (createdPlaceholderKey) {
-        return {
-          ...state,
-          nodeMap: nextMap,
-          selection: {
-            anchorNode: nextMap[createdPlaceholderKey],
-            anchorOffset: 0,
-            focusNode: nextMap[createdPlaceholderKey],
-            focusOffset: 0,
-            type: 'caret',
-          },
-        }
-      }
     }
   }
 
   return { ...state, nodeMap: nextMap }
 }
 
-export function remapSelectionAfterNormalization(
-  before: EditorState,
-  after: EditorState
-): EditorState {
-  if (!before.selection) return after
+function getSurvivingNodeText(
+  nodeMap: NodeMap,
+  nodeKey: NodeKey | undefined,
+  offset: number
+) {
+  if (!nodeKey) return null
+  const node = nodeMap[nodeKey]
+  if (!node || !isTextNode(node)) return null
 
-  const selectedKey = before.selection.anchorNode?.key
-  if (!selectedKey) return after
-
-  const survivingNode = after.nodeMap[selectedKey!]
-
-  if (survivingNode && isTextNode(survivingNode)) {
-    const offset = Math.min(
-      before.selection.anchorOffset,
-      survivingNode.text.length
-    )
-
-    return {
-      ...after,
-      selection: {
-        anchorNode: survivingNode,
-        anchorOffset: offset,
-        focusNode: survivingNode,
-        focusOffset: offset,
-        type: 'caret',
-      },
-    }
+  return {
+    node,
+    offset: Math.min(offset, node.text.length),
   }
+}
 
-  // normalization removed the node that was selected
-  const oldNode = before.nodeMap[selectedKey!]
-
-  if (!oldNode || !oldNode.parent) return after
+export function findFallbackTextPoint(
+  before: EditorState,
+  after: EditorState,
+  key: NodeKey
+): { node: TextNode; offset: number } | null {
+  const oldNode = before.nodeMap[key]
+  if (!oldNode || !oldNode.parent) return null
 
   const oldParent = before.nodeMap[oldNode.parent]
   const newParent = after.nodeMap[oldNode.parent]
@@ -219,60 +190,99 @@ export function remapSelectionAfterNormalization(
     !isElementNode(oldParent) ||
     !isElementNode(newParent)
   ) {
-    return after
+    return null
   }
 
-  const oldIndex = oldParent.children.indexOf(selectedKey!)
-  if (oldIndex < 0) return after
+  const oldIndex = oldParent.children.indexOf(key)
+  if (oldIndex < 0) return null
 
   for (let idx = oldIndex - 1; idx >= 0; idx--) {
     const previous = after.nodeMap[oldParent.children[idx]]
     if (previous && isTextNode(previous)) {
       return {
-        ...after,
-        selection: {
-          anchorNode: previous,
-          anchorOffset: previous.text.length,
-          focusNode: previous,
-          focusOffset: previous.text.length,
-          type: 'caret',
-        },
+        node: previous,
+        offset: previous.text.length,
       }
     }
   }
-
   for (let idx = oldIndex + 1; idx < oldParent.children.length; idx++) {
     const next = after.nodeMap[oldParent.children[idx]]
-
     if (next && isTextNode(next)) {
       return {
-        ...after,
-        selection: {
-          anchorNode: next,
-          anchorOffset: 0,
-          focusNode: next,
-          focusOffset: 0,
-          type: 'caret',
-        },
+        node: next,
+        offset: 0,
       }
     }
   }
 
-  // if (newParent.children.length > 0) {
-  //   const prevNode = after.nodeMap[newParent.children[0]]
-  //   if (prevNode && isTextNode(prevNode)) {
-  //     return {
-  //       ...after,
-  //       selection: {
-  //         anchorNode: prevNode,
-  //         anchorOffset: prevNode.text.length,
-  //         focusNode: prevNode,
-  //         focusOffset: prevNode.text.length,
-  //         type: 'caret',
-  //       },
-  //     }
-  //   }
-  // }
+  for (const child of newParent.children) {
+    const node = after.nodeMap[child]
+    if (node && isTextNode(node)) {
+      return {
+        node: node,
+        offset: 0,
+      }
+    }
+  }
+  return null
+}
 
-  return after
+export function remapSelectionAfterNormalization(
+  before: EditorState,
+  after: EditorState
+): EditorState {
+  if (!before.selection) return after
+
+  //check if anchorNode Survived
+  const anchor = getSurvivingNodeText(
+    after.nodeMap,
+    before.selection.anchorNode?.key,
+    before.selection.anchorOffset
+  )
+
+  const focus = getSurvivingNodeText(
+    after.nodeMap,
+    before.selection.focusNode?.key,
+    before.selection.focusOffset
+  )
+
+  if (anchor && focus) {
+    return {
+      ...after,
+      selection: {
+        type: before.selection.type,
+        anchorNode: anchor.node,
+        focusNode: focus.node,
+        anchorOffset: anchor.offset,
+        focusOffset: focus.offset,
+      },
+    }
+  }
+
+  const survivingNode = anchor ?? focus
+
+  if (survivingNode) {
+    return {
+      ...after,
+      selection: {
+        type: 'caret',
+        anchorNode: survivingNode.node,
+        focusNode: survivingNode.node,
+        anchorOffset: survivingNode.offset,
+        focusOffset: survivingNode.offset,
+      },
+    }
+  }
+
+  const selectedKey = before.selection.anchorNode?.key
+  const fallback = selectedKey
+    ? findFallbackTextPoint(before, after, selectedKey)
+    : null
+
+  return {
+    ...after,
+    selection: fallback
+      ? createCaretSelection(fallback.node, fallback.offset)
+      : null,
+  }
 }

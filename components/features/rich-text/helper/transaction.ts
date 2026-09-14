@@ -11,6 +11,19 @@ import {
   remapSelectionAfterNormalization,
 } from './normalizer'
 
+type TextPoint = {
+  node: TextNode
+  offset: number
+  index: number
+}
+
+type TextRange = {
+  parentNode: ElementNode
+  start: TextPoint
+  end: TextPoint
+  backward: boolean
+}
+
 export function applyTransaction(
   state: EditorState,
   transaction: Transaction
@@ -27,20 +40,6 @@ export function applyTransaction(
       return null
   }
 }
-
-type TextPoint = {
-  node: TextNode
-  offset: number
-  index: number
-}
-
-type TextRange = {
-  parentNode: ElementNode
-  start: TextPoint
-  end: TextPoint
-  backward: boolean
-}
-
 const getTextRange = (state: EditorState): TextRange | null => {
   const { selection, nodeMap } = state
 
@@ -163,13 +162,10 @@ const replaceTextRange = (
 
   const nextOffset = startPrefix.length + replacementText.length
 
-  const nextSelection: EditorSelection = {
-    anchorNode: updatedStartNode,
-    focusNode: updatedStartNode,
-    anchorOffset: nextOffset,
-    focusOffset: nextOffset,
-    type: 'caret',
-  }
+  const nextSelection: EditorSelection = createCaretSelection(
+    updatedStartNode,
+    nextOffset
+  )
 
   const nextNodeMap = {
     ...state.nodeMap,
@@ -193,7 +189,6 @@ const replaceTextRange = (
   }
 
   const normalizedState = normalizeDocument(nextState)
-  console.log(normalizedState, nextState)
   return remapSelectionAfterNormalization(nextState, normalizedState)
 }
 
@@ -218,9 +213,6 @@ const resolveBackwardDeletionRange = (state: EditorState): TextRange | null => {
 
   if (!isCollapsed) return currentRange
 
-  // Need to set the backward
-
-  // simple case
   if (start.offset > 0) {
     return {
       ...currentRange,
@@ -265,4 +257,17 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, '')
+}
+
+export const createCaretSelection = (
+  node: TextNode,
+  offset: number
+): EditorSelection => {
+  return {
+    anchorNode: node,
+    anchorOffset: offset,
+    focusNode: node,
+    focusOffset: offset,
+    type: 'caret',
+  }
 }
