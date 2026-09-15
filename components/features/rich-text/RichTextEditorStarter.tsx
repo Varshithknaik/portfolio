@@ -13,6 +13,11 @@ export function RichTextEditorStarter() {
     normalizeDocument(createInitState())
   )
   const editorRef = useRef<HTMLDivElement>(null)
+  const latestStateRef = useRef(state)
+
+  useEffect(() => {
+    latestStateRef.current = state
+  }, [state])
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
     const isModifier = event.metaKey || event.ctrlKey
@@ -36,8 +41,6 @@ export function RichTextEditorStarter() {
         return
       }
 
-      event.preventDefault()
-
       const insertData = event.data ?? ''
 
       const transaction: Transaction = {
@@ -49,7 +52,13 @@ export function RichTextEditorStarter() {
         origin: 'keyboard',
       }
 
-      setState((prev) => applyTransaction(prev, transaction) ?? prev)
+      const newState = applyTransaction(latestStateRef.current, transaction)
+
+      if (!newState) return
+
+      event.preventDefault()
+
+      setState(newState)
     }
     editor.addEventListener('beforeinput', handleBeforeInput, {
       passive: false,
@@ -58,7 +67,7 @@ export function RichTextEditorStarter() {
     return () => {
       editor.removeEventListener('beforeinput', handleBeforeInput)
     }
-  }, [state])
+  }, [])
 
   useSelection({
     editorElement: editorRef,

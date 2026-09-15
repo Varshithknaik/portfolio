@@ -131,7 +131,7 @@ const getTextRange = (state: EditorState): TextRange | null => {
     parentNode,
     start,
     end,
-    backward: isAnchorBeforeFocus,
+    backward: !isAnchorBeforeFocus,
   }
 }
 
