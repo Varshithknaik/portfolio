@@ -7,6 +7,7 @@ import {
 } from '../type/schema'
 import { createKey, isElementNode, isTextNode } from './nodeUtils'
 import {
+  createCaretSelection,
   normalizeDocument,
   remapSelectionAfterNormalization,
 } from './normalizer'
@@ -257,17 +258,4 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, '')
-}
-
-export const createCaretSelection = (
-  node: TextNode,
-  offset: number
-): EditorSelection => {
-  return {
-    anchorNode: node,
-    anchorOffset: offset,
-    focusNode: node,
-    focusOffset: offset,
-    type: 'caret',
-  }
 }

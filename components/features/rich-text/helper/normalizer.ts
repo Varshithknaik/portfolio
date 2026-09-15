@@ -1,4 +1,10 @@
-import { EditorState, NodeKey, NodeMap, TextNode } from '../type/schema'
+import {
+  EditorSelection,
+  EditorState,
+  NodeKey,
+  NodeMap,
+  TextNode,
+} from '../type/schema'
 import {
   canonicalizeMarks,
   createKey,
@@ -7,7 +13,19 @@ import {
   isTextNode,
   sameMarks,
 } from './nodeUtils'
-import { createCaretSelection } from './transaction'
+
+export const createCaretSelection = (
+  node: TextNode,
+  offset: number
+): EditorSelection => {
+  return {
+    anchorNode: node,
+    anchorOffset: offset,
+    focusNode: node,
+    focusOffset: offset,
+    type: 'caret',
+  }
+}
 
 const removeNodeAndDescendents = (nodeMap: NodeMap, nodeKey: NodeKey) => {
   const node = nodeMap[nodeKey]
@@ -120,7 +138,6 @@ export function normalizeDocument(state: EditorState): EditorState {
   const rootChildren = root.children.filter((key) => {
     return !!nodeMap[key]
   })
-
   // rapair logic
   if (rootChildren.length === 0) {
     const paragraphKey = createKey('paragraph')
