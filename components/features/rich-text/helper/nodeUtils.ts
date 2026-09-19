@@ -19,7 +19,7 @@ export const createInitState = (): EditorState => {
       type: 'root',
       key: rootKey,
       parent: null,
-      children: [paragraphKey, paragraphKey2],
+      children: [paragraphKey, paragraphKey2, 'p-1'],
     },
     [paragraphKey]: {
       type: 'paragraph',
@@ -52,6 +52,26 @@ export const createInitState = (): EditorState => {
       key: 't-2',
       parent: paragraphKey,
       text: 'world',
+      marks: [],
+    },
+    'p-1': {
+      type: 'paragraph',
+      key: 'p-1',
+      parent: paragraphKey,
+      children: ['t-4', 't-5'],
+    },
+    't-4': {
+      type: 'text',
+      key: 't-4',
+      parent: 'p-1',
+      text: 'Hello ',
+      marks: ['bold'],
+    },
+    't-5': {
+      type: 'text',
+      key: 't-5',
+      parent: 'p-1',
+      text: 'world from diffrent paragraph',
       marks: [],
     },
     't-3': {

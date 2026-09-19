@@ -167,8 +167,7 @@ export function normalizeDocument(state: EditorState): EditorState {
     }
 
     if (isElementNode(child)) {
-      const newMap = normalizeTextChildren(nextMap, childKey)
-      nextMap = newMap
+      nextMap = normalizeTextChildren(nextMap, childKey)
     }
   }
 
