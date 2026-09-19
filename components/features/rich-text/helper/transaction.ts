@@ -21,13 +21,6 @@ type TextPoint = {
   index: number
 }
 
-type TextRange = {
-  parentNode: ElementNode
-  start: TextPoint
-  end: TextPoint
-  backward: boolean
-}
-
 type TreeTextRange = {
   commonAncestor: ElementNode
   start: TextPoint
@@ -55,99 +48,6 @@ export function applyTransaction(
       return null
   }
 }
-const getTextRange = (state: EditorState): TextRange | null => {
-  const { selection, nodeMap } = state
-
-  if (!selection) return null
-
-  const anchorNodeKey = selection.anchorNode?.key
-  const focusNodeKey = selection.focusNode?.key
-
-  if (!anchorNodeKey || !focusNodeKey) return null
-
-  const anchorNode = nodeMap[anchorNodeKey]
-  const focusNode = nodeMap[focusNodeKey]
-
-  if (!anchorNode || !focusNode) return null
-
-  if (
-    !anchorNode ||
-    !focusNode ||
-    !isTextNode(anchorNode) ||
-    !isTextNode(focusNode)
-  ) {
-    return null
-  }
-
-  if (!anchorNode.parent || !focusNode.parent) return null
-
-  const parentNode = nodeMap[anchorNode.parent]
-  if (!parentNode || !isElementNode(parentNode)) return null
-
-  const indexOfAnchor = parentNode.children.indexOf(anchorNode.key)
-  const indexOfFocus = parentNode.children.indexOf(focusNode.key)
-
-  if (indexOfAnchor === -1 || indexOfFocus === -1) return null
-
-  const { anchorOffset, focusOffset } = selection
-
-  const isValidAnchorOffset =
-    anchorOffset >= 0 && anchorOffset <= anchorNode.text.length
-
-  const isValidFocusOffset =
-    focusOffset >= 0 && focusOffset <= focusNode.text.length
-
-  if (!isValidAnchorOffset || !isValidFocusOffset) return null
-
-  const affectedKeys = parentNode.children.slice(
-    Math.min(indexOfAnchor, indexOfFocus),
-    Math.max(indexOfAnchor, indexOfFocus) + 1
-  )
-
-  if (
-    affectedKeys.some((key) => {
-      const node = nodeMap[key]
-      return !node || !isTextNode(node)
-    })
-  ) {
-    return null
-  }
-
-  const isAnchorBeforeFocus =
-    indexOfAnchor < indexOfFocus ||
-    (indexOfAnchor === indexOfFocus && anchorOffset <= focusOffset)
-
-  const start: TextPoint = isAnchorBeforeFocus
-    ? {
-        node: anchorNode,
-        index: indexOfAnchor,
-        offset: anchorOffset,
-      }
-    : {
-        node: focusNode,
-        index: indexOfFocus,
-        offset: focusOffset,
-      }
-
-  const end: TextPoint = isAnchorBeforeFocus
-    ? {
-        node: focusNode,
-        index: indexOfFocus,
-        offset: focusOffset,
-      }
-    : {
-        node: anchorNode,
-        index: indexOfAnchor,
-        offset: anchorOffset,
-      }
-
-  return {
-    parentNode,
-    start,
-    end,
-    backward: !isAnchorBeforeFocus,
-  }
-}
 
 const resolveTextNode = (
   key: NodeKey | undefined,
@@ -165,6 +65,8 @@ const resolveTextNode = (
   if (!isValidOffset) return null
 
   const index = parentNode.children.indexOf(node.key)
+
+  if (index < 0) return null
 
   return {
     node,
@@ -270,13 +172,17 @@ const getCrossTextRange = (state: EditorState): TreeTextRange | null => {
 
   if (!common) return null
 
-  const isAnchorFirst = compareTreePoints(
+  const comparison = compareTreePoints(
     common.commonAncestor,
     common.startPath,
     anchor.offset,
     common.endPath,
     focus.offset
   )
+
+  if (!comparison) return null
+
+  const isAnchorFirst = comparison <= 0
 
   return {
     commonAncestor: common.commonAncestor,
@@ -290,10 +196,10 @@ const getCrossTextRange = (state: EditorState): TreeTextRange | null => {
 
 const replaceTextRange = (
   state: EditorState,
-  range: TextRange,
+  range: TreeTextRange,
   replacementText: string
 ): EditorState => {
-  const { start, end, parentNode } = range
+  const { start, end, commonAncestor } = range
   const startPrefix = start.node.text.slice(0, start.offset)
   const endSuffix = end.node.text.slice(end.offset)
 
@@ -309,9 +215,9 @@ const replaceTextRange = (
   }
 
   const nextChildren = [
-    ...parentNode.children.slice(0, start.index + 1),
+    ...commonAncestor.children.slice(0, start.index + 1),
     newEndNodeKey,
-    ...parentNode.children.slice(end.index + 1),
+    ...commonAncestor.children.slice(end.index + 1),
   ]
 
   const nextOffset = startPrefix.length + replacementText.length
@@ -325,13 +231,16 @@ const replaceTextRange = (
     ...state.nodeMap,
     [start.node.key]: updatedStartNode,
     [newEndNodeKey]: updatedEndNode,
-    [parentNode.key]: {
-      ...parentNode,
+    [commonAncestor.key]: {
+      ...commonAncestor,
       children: nextChildren,
     },
   }
 
-  const removedKeys = parentNode.children.slice(start.index + 1, end.index + 1)
+  const removedKeys = commonAncestor.children.slice(
+    start.index + 1,
+    end.index + 1
+  )
   for (const key of removedKeys) {
     delete nextNodeMap[key]
   }
@@ -350,30 +259,29 @@ const replaceTextSelection = (
   state: EditorState,
   text: string
 ): EditorState | null => {
-  const textRange = getTextRange(state)
   const crossBlockTextRange = getCrossTextRange(state)
 
-  console.log({ textRange, crossBlockTextRange })
-
-  if (!textRange) return null
-  return replaceTextRange(state, textRange, text)
+  if (!crossBlockTextRange) return null
+  return replaceTextRange(state, crossBlockTextRange, text)
 }
 
-const resolveBackwardDeletionRange = (state: EditorState): TextRange | null => {
-  const currentRange = getTextRange(state)
+const resolveBackwardDeletionRange = (
+  state: EditorState
+): TreeTextRange | null => {
+  const crossBlockTextRange = getCrossTextRange(state)
 
-  if (!currentRange) return null
+  if (!crossBlockTextRange) return null
 
-  const { start, end, parentNode } = currentRange
+  const { start, end, commonAncestor } = crossBlockTextRange
 
   const isCollapsed =
     start.node.key === end.node.key && start.offset === end.offset
 
-  if (!isCollapsed) return currentRange
+  if (!isCollapsed) return crossBlockTextRange
 
   if (start.offset > 0) {
     return {
-      ...currentRange,
+      ...crossBlockTextRange,
       start: {
         ...start,
         offset: start.offset - 1,
@@ -384,14 +292,14 @@ const resolveBackwardDeletionRange = (state: EditorState): TextRange | null => {
 
   // If not start.offset is is 0 select the previous child if present
   for (let idx = start.index - 1; idx >= 0; idx--) {
-    const prevKey = parentNode.children[idx]
+    const prevKey = commonAncestor.children[idx]
     const prevNode = state.nodeMap[prevKey]
 
     if (!prevNode || !isTextNode(prevNode)) return null
     if (prevNode.text.length === 0) continue
 
     return {
-      ...currentRange,
+      ...crossBlockTextRange,
       start: {
         node: prevNode,
         index: idx,
