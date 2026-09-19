@@ -194,11 +194,11 @@ const getCrossTextRange = (state: EditorState): TreeTextRange | null => {
   }
 }
 
-const replaceTextRange = (
-  state: EditorState,
+const replaceInSingleParent = (
   range: TreeTextRange,
-  replacementText: string
-): EditorState => {
+  replacementText: string,
+  state: EditorState
+) => {
   const { start, end, commonAncestor } = range
   const startPrefix = start.node.text.slice(0, start.offset)
   const endSuffix = end.node.text.slice(end.offset)
@@ -253,6 +253,18 @@ const replaceTextRange = (
 
   const normalizedState = normalizeDocument(nextState)
   return remapSelectionAfterNormalization(nextState, normalizedState)
+}
+
+const replaceTextRange = (
+  state: EditorState,
+  range: TreeTextRange,
+  replacementText: string
+): EditorState => {
+  if (range.startPath.length === 1 && range.endPath.length === 1) {
+    return replaceInSingleParent(range, replacementText, state)
+  } else {
+    return state
+  }
 }
 
 const replaceTextSelection = (
@@ -319,7 +331,7 @@ const resolveBackwardDeletionRange = (
 
 const deleteTextSelection = (state: EditorState): EditorState | null => {
   const textRange = resolveBackwardDeletionRange(state)
-
+  console.log(textRange)
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, '')
