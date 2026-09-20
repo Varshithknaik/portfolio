@@ -30,6 +30,8 @@ type TreeTextRange = {
   backward: boolean
 }
 
+type ReplacementPolicy = 'same-parent' | 'sibling-block-merge'
+
 const maxDepth = 32
 
 export function applyTransaction(
@@ -255,16 +257,144 @@ const replaceInSingleParent = (
   return remapSelectionAfterNormalization(nextState, normalizedState)
 }
 
+const getPointParentKey = (range: TreeTextRange, path: NodeKey[]): NodeKey =>
+  path.length === 1 ? range.commonAncestor.key : path[path.length - 2]
+
+const replaceInSiblingBlocks = (
+  range: TreeTextRange,
+  replacementText: string,
+  state: EditorState
+) => {
+  const { start, startPath, end, commonAncestor, endPath } = range
+  const startPrefix = start.node.text.slice(0, start.offset)
+  const endSuffix = end.node.text.slice(end.offset)
+
+  const updatedStartNode: TextNode = {
+    ...start.node,
+    text: startPrefix + replacementText,
+  }
+  const newEndNodeKey = createKey('t')
+  const updatedEndNode: TextNode = {
+    ...end.node,
+    key: newEndNodeKey,
+    text: endSuffix,
+  }
+
+  const startParentNodeKey: NodeKey = getPointParentKey(range, startPath)
+  const startParentNode = state.nodeMap[startParentNodeKey]
+  const endParentNodeKey: NodeKey = getPointParentKey(range, endPath)
+  const endParentNode = state.nodeMap[endParentNodeKey]
+
+  if (
+    !startParentNode ||
+    !isElementNode(startParentNode) ||
+    !endParentNode ||
+    !isElementNode(endParentNode)
+  )
+    return null
+
+  const startNodeIndex = commonAncestor.children.indexOf(startParentNodeKey)
+  const endNodeIndex = commonAncestor.children.indexOf(endParentNodeKey)
+
+  const nextChildren = [
+    ...commonAncestor.children.slice(0, startNodeIndex + 1),
+    ...commonAncestor.children.slice(endNodeIndex + 1),
+  ]
+
+  const nextOffset = startPrefix.length + replacementText.length
+
+  const nextSelection: EditorSelection = createCaretSelection(
+    updatedStartNode,
+    nextOffset
+  )
+
+  const nextNodeMap = {
+    ...state.nodeMap,
+    [start.node.key]: updatedStartNode,
+    [newEndNodeKey]: updatedEndNode,
+    [commonAncestor.key]: {
+      ...commonAncestor,
+      children: nextChildren,
+    },
+    [startParentNode.key]: {
+      ...startParentNode,
+      children: [
+        ...startParentNode.children.slice(0, start.index + 1),
+        newEndNodeKey,
+        ...endParentNode.children.slice(end.index + 1),
+      ],
+    },
+  }
+
+  const removedKeys = commonAncestor.children.slice(
+    start.index + 1,
+    end.index + 1
+  )
+  for (const key of removedKeys) {
+    delete nextNodeMap[key]
+  }
+
+  const nextState = {
+    ...state,
+    nodeMap: nextNodeMap,
+    selection: nextSelection,
+  }
+
+  const normalizedState = normalizeDocument(nextState)
+  return remapSelectionAfterNormalization(nextState, normalizedState)
+}
+
+const haveCompatibleBlockKinds = (a: ElementNode, b: ElementNode): boolean => {
+  if (a.type !== b.type) return false
+
+  if (a.type === 'heading' && b.type === 'heading') {
+    return a.level === b.level
+  }
+
+  return a.type === 'paragraph' && b.type === 'paragraph'
+}
+
+const getReplacementPolicy = (
+  state: EditorState,
+  range: TreeTextRange
+): ReplacementPolicy | null => {
+  if (range.startPath.length === 1 && range.endPath.length === 1) {
+    return 'same-parent'
+  }
+
+  const isSiblingBlocks =
+    range.startPath.length === 2 && range.endPath.length === 2
+  if (!isSiblingBlocks) return null
+
+  const startBlock = state.nodeMap[range.startPath[0]]
+  const endBlock = state.nodeMap[range.endPath[0]]
+
+  if (
+    startBlock &&
+    endBlock &&
+    isElementNode(startBlock) &&
+    isElementNode(endBlock) &&
+    haveCompatibleBlockKinds(startBlock, endBlock)
+  ) {
+    return 'sibling-block-merge'
+  }
+
+  return null
+}
+
 const replaceTextRange = (
   state: EditorState,
   range: TreeTextRange,
   replacementText: string
-): EditorState => {
-  if (range.startPath.length === 1 && range.endPath.length === 1) {
+): EditorState | null => {
+  const policy = getReplacementPolicy(state, range)
+
+  if (policy === 'same-parent') {
     return replaceInSingleParent(range, replacementText, state)
-  } else {
-    return state
+  } else if (policy === 'sibling-block-merge') {
+    return replaceInSiblingBlocks(range, replacementText, state)
   }
+  return null
 }
 
 const replaceTextSelection = (
@@ -331,7 +461,6 @@ const resolveBackwardDeletionRange = (
 
 const deleteTextSelection = (state: EditorState): EditorState | null => {
   const textRange = resolveBackwardDeletionRange(state)
-  console.log(textRange)
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, '')
