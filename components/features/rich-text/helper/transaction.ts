@@ -147,7 +147,7 @@ const compareTreePoints = (
   return leftOffset - rightOffset
 }
 
-const getCrossTextRange = (state: EditorState): TreeTextRange | null => {
+const resolveTreeTextRange = (state: EditorState): TreeTextRange | null => {
   const { selection, nodeMap } = state
 
   if (!selection) return null
@@ -182,7 +182,7 @@ const getCrossTextRange = (state: EditorState): TreeTextRange | null => {
     focus.offset
   )
 
-  if (!comparison) return null
+  if (comparison === null) return null
 
   const isAnchorFirst = comparison <= 0
 
@@ -401,7 +401,7 @@ const replaceTextSelection = (
   state: EditorState,
   text: string
 ): EditorState | null => {
-  const crossBlockTextRange = getCrossTextRange(state)
+  const crossBlockTextRange = resolveTreeTextRange(state)
 
   if (!crossBlockTextRange) return null
   return replaceTextRange(state, crossBlockTextRange, text)
@@ -410,7 +410,7 @@ const replaceTextSelection = (
 const resolveBackwardDeletionRange = (
   state: EditorState
 ): TreeTextRange | null => {
-  const crossBlockTextRange = getCrossTextRange(state)
+  const crossBlockTextRange = resolveTreeTextRange(state)
 
   if (!crossBlockTextRange) return null
 
