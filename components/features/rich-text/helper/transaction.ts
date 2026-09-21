@@ -85,7 +85,8 @@ const getPathToRoot = (leaf: NodeKey, nodeMap: NodeMap): NodeKey[] | null => {
   while (currentKey && depth++ < maxDepth) {
     path.push(currentKey)
     const node: EditorNode = nodeMap[currentKey]
-    if (!node || node.parent === null) return path.reverse()
+    if (!node) return null
+    if (node.parent === null) return path.reverse()
     currentKey = node.parent
   }
   return null
@@ -296,6 +297,10 @@ const replaceInSiblingBlocks = (
   const startNodeIndex = commonAncestor.children.indexOf(startParentNodeKey)
   const endNodeIndex = commonAncestor.children.indexOf(endParentNodeKey)
 
+  const isValidIndex = startNodeIndex >= 0 && endNodeIndex > startNodeIndex
+
+  if (!isValidIndex) return null
+
   const nextChildren = [
     ...commonAncestor.children.slice(0, startNodeIndex + 1),
     ...commonAncestor.children.slice(endNodeIndex + 1),
@@ -311,7 +316,7 @@ const replaceInSiblingBlocks = (
   const nextNodeMap = {
     ...state.nodeMap,
     [start.node.key]: updatedStartNode,
-    [newEndNodeKey]: updatedEndNode,
+    [newEndNodeKey]: { ...updatedEndNode, parent: startParentNode.key },
     [commonAncestor.key]: {
       ...commonAncestor,
       children: nextChildren,
@@ -326,10 +331,32 @@ const replaceInSiblingBlocks = (
     },
   }
 
-  const removedKeys = commonAncestor.children.slice(
-    start.index + 1,
-    end.index + 1
+  const intermediateBlockKeys = commonAncestor.children.slice(
+    startNodeIndex + 1,
+    endNodeIndex
   )
+
+  const removedStartTextKeys = startParentNode.children.slice(start.index + 1)
+
+  const removedEndTextKeys = endParentNode.children.slice(0, end.index + 1)
+
+  const removedKeys = new Set<NodeKey>([
+    ...removedStartTextKeys,
+    ...removedEndTextKeys,
+    ...intermediateBlockKeys,
+    endParentNode.key,
+  ])
+
+  for (const blockKey of intermediateBlockKeys) {
+    const block = state.nodeMap[blockKey]
+
+    if (block && isElementNode(block)) {
+      for (const childKey of block.children) {
+        removedKeys.add(childKey)
+      }
+    }
+  }
+
   for (const key of removedKeys) {
     delete nextNodeMap[key]
   }
