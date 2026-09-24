@@ -32,6 +32,12 @@ type TreeTextRange = {
 
 type ReplacementPolicy = 'same-parent' | 'sibling-block-merge'
 
+type BoundaryTextNodes = {
+  updatedStartNode: TextNode
+  updatedEndNode: TextNode
+  nextOffset: number
+}
+
 const maxDepth = 32
 
 export function applyTransaction(
@@ -203,27 +209,15 @@ const replaceInSingleParent = (
   state: EditorState
 ) => {
   const { start, end, commonAncestor } = range
-  const startPrefix = start.node.text.slice(0, start.offset)
-  const endSuffix = end.node.text.slice(end.offset)
 
-  const updatedStartNode: TextNode = {
-    ...start.node,
-    text: startPrefix + replacementText,
-  }
-  const newEndNodeKey = createKey('t')
-  const updatedEndNode: TextNode = {
-    ...end.node,
-    key: newEndNodeKey,
-    text: endSuffix,
-  }
+  const { updatedStartNode, updatedEndNode, nextOffset } =
+    createBoundaryTextNodes(start, end, replacementText)
 
   const nextChildren = [
     ...commonAncestor.children.slice(0, start.index + 1),
-    newEndNodeKey,
+    updatedEndNode.key,
     ...commonAncestor.children.slice(end.index + 1),
   ]
-
-  const nextOffset = startPrefix.length + replacementText.length
 
   const nextSelection: EditorSelection = createCaretSelection(
     updatedStartNode,
@@ -233,7 +227,7 @@ const replaceInSingleParent = (
   const nextNodeMap = {
     ...state.nodeMap,
     [start.node.key]: updatedStartNode,
-    [newEndNodeKey]: updatedEndNode,
+    [updatedEndNode.key]: updatedEndNode,
     [commonAncestor.key]: {
       ...commonAncestor,
       children: nextChildren,
@@ -261,12 +255,12 @@ const replaceInSingleParent = (
 const getPointParentKey = (range: TreeTextRange, path: NodeKey[]): NodeKey =>
   path.length === 1 ? range.commonAncestor.key : path[path.length - 2]
 
-const replaceInSiblingBlocks = (
-  range: TreeTextRange,
+const createBoundaryTextNodes = (
+  start: TextPoint,
+  end: TextPoint,
   replacementText: string,
-  state: EditorState
-) => {
-  const { start, startPath, end, commonAncestor, endPath } = range
+  endParentKey?: NodeKey
+): BoundaryTextNodes => {
   const startPrefix = start.node.text.slice(0, start.offset)
   const endSuffix = end.node.text.slice(end.offset)
 
@@ -274,13 +268,30 @@ const replaceInSiblingBlocks = (
     ...start.node,
     text: startPrefix + replacementText,
   }
+
   const newEndNodeKey = createKey('t')
   const updatedEndNode: TextNode = {
     ...end.node,
     key: newEndNodeKey,
+    parent: endParentKey ?? end.node.parent,
     text: endSuffix,
   }
 
+  const nextOffset = startPrefix.length + replacementText.length
+
+  return {
+    updatedStartNode,
+    updatedEndNode,
+    nextOffset,
+  }
+}
+
+const replaceInSiblingBlocks = (
+  range: TreeTextRange,
+  replacementText: string,
+  state: EditorState
+) => {
+  const { start, startPath, end, commonAncestor, endPath } = range
   const startParentNodeKey: NodeKey = getPointParentKey(range, startPath)
   const startParentNode = state.nodeMap[startParentNodeKey]
   const endParentNodeKey: NodeKey = getPointParentKey(range, endPath)
@@ -294,29 +305,24 @@ const replaceInSiblingBlocks = (
   )
     return null
 
+  const { updatedStartNode, updatedEndNode, nextOffset } =
+    createBoundaryTextNodes(start, end, replacementText, startParentNode.key)
   const startNodeIndex = commonAncestor.children.indexOf(startParentNodeKey)
   const endNodeIndex = commonAncestor.children.indexOf(endParentNodeKey)
-
   const isValidIndex = startNodeIndex >= 0 && endNodeIndex > startNodeIndex
-
   if (!isValidIndex) return null
-
   const nextChildren = [
     ...commonAncestor.children.slice(0, startNodeIndex + 1),
     ...commonAncestor.children.slice(endNodeIndex + 1),
   ]
-
-  const nextOffset = startPrefix.length + replacementText.length
-
   const nextSelection: EditorSelection = createCaretSelection(
     updatedStartNode,
     nextOffset
   )
-
   const nextNodeMap = {
     ...state.nodeMap,
     [start.node.key]: updatedStartNode,
-    [newEndNodeKey]: { ...updatedEndNode, parent: startParentNode.key },
+    [updatedEndNode.key]: updatedEndNode,
     [commonAncestor.key]: {
       ...commonAncestor,
       children: nextChildren,
@@ -325,7 +331,7 @@ const replaceInSiblingBlocks = (
       ...startParentNode,
       children: [
         ...startParentNode.children.slice(0, start.index + 1),
-        newEndNodeKey,
+        updatedEndNode.key,
         ...endParentNode.children.slice(end.index + 1),
       ],
     },

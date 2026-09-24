@@ -55,6 +55,8 @@ export interface EditorState {
   selection: EditorSelection | null
 }
 
+type BlockType = 'paragraph' | 'heading'
+
 export type Transaction =
   | {
       type: 'insertText'
@@ -65,4 +67,11 @@ export type Transaction =
       type: 'deleteText'
       text: string
       origin: 'keyboard'
+    }
+  | { type: 'toggleMark'; mark: Mark; origin: 'toolbar' }
+  | {
+      type: 'setBlockType'
+      blockType: BlockType
+      level?: 1 | 2 | 3
+      origin: 'toolbar'
     }

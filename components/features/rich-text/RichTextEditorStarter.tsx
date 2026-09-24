@@ -7,6 +7,7 @@ import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
 import { useSelection } from './hooks/useSelection'
 import { applyTransaction } from './helper/transaction'
+import { ToolBar } from './components/ToolBar.component'
 
 export function RichTextEditorStarter() {
   const [state, setState] = useState<EditorState>(() =>
@@ -83,23 +84,35 @@ export function RichTextEditorStarter() {
 
   return (
     <div
-      ref={editorRef}
-      contentEditable
-      suppressContentEditableWarning
-      autoCorrect="off"
-      spellCheck={false}
-      autoCapitalize="off"
-      data-gramm="false"
-      onKeyDown={handleKeyDown}
-      className="surface-card p-3 md:p-5 min-h-[6rem] max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap"
+      onClick={() => editorRef.current?.focus()}
+      className="surface-card rounded-ui flex flex-col transition-all duration-150 cursor-text overflow-hidden"
     >
-      {root.children.map((childKey) => {
-        const node = state.nodeMap[childKey]
-        if (!node) {
-          throw new Error('Node not found in map')
-        }
-        return <NodeRenderer key={node.key} state={state} nodeKey={node.key} />
-      })}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="border-b border-line/50 px-2.5 py-1.5 flex items-center gap-1 bg-[var(--color-bg)]/50 backdrop-blur-sm"
+      >
+        <ToolBar />
+      </div>
+
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        autoCorrect="off"
+        spellCheck={false}
+        autoCapitalize="off"
+        data-gramm="false"
+        onKeyDown={handleKeyDown}
+        className="p-3 md:p-4 min-h-[7rem] max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap flex-1"
+      >
+        {root.children.map((childKey) => {
+          const node = state.nodeMap[childKey]
+          if (!node) throw new Error('Node not found in map')
+          return (
+            <NodeRenderer key={node.key} state={state} nodeKey={node.key} />
+          )
+        })}
+      </div>
     </div>
   )
 }
