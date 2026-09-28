@@ -1,11 +1,6 @@
-import {
-  MdFormatBold,
-  MdFormatItalic,
-  MdFormatUnderlined,
-} from 'react-icons/md'
-import { EditorState, Transaction } from '../type/schema'
-import { isTextNode } from '../helper/nodeUtils'
 import { Dispatch } from 'react'
+import { EditorState, Transaction } from '../type/schema'
+import { getToolbarButtons, ToolbarKey } from '../helper/toolbar'
 
 interface IToolBarBtn {
   isSelected: boolean
@@ -34,46 +29,55 @@ interface ITextEditorToolBar {
   dispatch: Dispatch<Transaction>
 }
 
+const buttons = getToolbarButtons()
+
 export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
-  // just include for the carat selection and bold only
   const selection = state.selection
 
-  // get mark for the anchor Node
   const anchorNodeKey = selection?.anchorNode?.key
+  const offsetNodeKey = selection?.focusNode?.key
 
-  let isBold = false
-  let isItalic = false
-  let isUnderline = false
+  const isSameNode = !!(anchorNodeKey && anchorNodeKey === offsetNodeKey)
+  const commonNodeKey = isSameNode ? anchorNodeKey : null
 
-  if (anchorNodeKey && isTextNode(state.nodeMap[anchorNodeKey])) {
-    const anchorNode = state.nodeMap[anchorNodeKey]
-    isBold = anchorNode.marks.some((m) => m === 'bold')
-    isItalic = anchorNode.marks.some((m) => m === 'italic')
-    isUnderline = anchorNode.marks.some((m) => m === 'underline')
+  const handleToolbarButtonClick = (key: ToolbarKey) => {
+    if (!commonNodeKey) return
+    if (key === 'bold' || key === 'italic' || key === 'underline') {
+      dispatch({
+        type: 'toggleMark',
+        mark: key,
+        targetNodeKey: commonNodeKey,
+        origin: 'toolbar',
+      })
+    } else if (key === 'paragraph') {
+      dispatch({
+        type: 'setBlockType',
+        blockType: 'paragraph',
+        origin: 'toolbar',
+      })
+    } else {
+      dispatch({
+        type: 'setBlockType',
+        blockType: 'heading',
+        level: Number(key[1]) as 1 | 2 | 3,
+        origin: 'toolbar',
+      })
+    }
   }
 
   return (
     <section className="flex gap-2">
-      <ToolBarBtn
-        isSelected={!!isBold}
-        onSelect={() => {
-          if (!anchorNodeKey) return
-          dispatch({
-            type: 'toggleMark',
-            mark: 'bold',
-            targetNodeKey: anchorNodeKey,
-            origin: 'toolbar',
-          })
-        }}
-      >
-        <MdFormatBold />
-      </ToolBarBtn>
-      <ToolBarBtn isSelected={!!isItalic} onSelect={() => {}}>
-        <MdFormatItalic />
-      </ToolBarBtn>
-      <ToolBarBtn isSelected={!!isUnderline} onSelect={() => {}}>
-        <MdFormatUnderlined />
-      </ToolBarBtn>
+      {buttons.map((btn) => (
+        <ToolBarBtn
+          key={btn.key}
+          isSelected={
+            !!commonNodeKey && btn.isSelected(state.nodeMap[commonNodeKey])
+          }
+          onSelect={() => handleToolbarButtonClick(btn.key)}
+        >
+          {btn.icon}
+        </ToolBarBtn>
+      ))}
     </section>
   )
 }
