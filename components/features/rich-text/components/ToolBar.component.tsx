@@ -1,4 +1,11 @@
-import { MdFormatBold } from 'react-icons/md'
+import {
+  MdFormatBold,
+  MdFormatItalic,
+  MdFormatUnderlined,
+} from 'react-icons/md'
+import { EditorState, Transaction } from '../type/schema'
+import { isTextNode } from '../helper/nodeUtils'
+import { Dispatch } from 'react'
 
 interface IToolBarBtn {
   isSelected: boolean
@@ -22,13 +29,51 @@ const ToolBarBtn = ({ isSelected, onSelect, children }: IToolBarBtn) => {
   )
 }
 
-export function ToolBar() {
+interface ITextEditorToolBar {
+  state: EditorState
+  dispatch: Dispatch<Transaction>
+}
+
+export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
+  // just include for the carat selection and bold only
+  const selection = state.selection
+
+  // get mark for the anchor Node
+  const anchorNodeKey = selection?.anchorNode?.key
+
+  let isBold = false
+  let isItalic = false
+  let isUnderline = false
+
+  if (anchorNodeKey && isTextNode(state.nodeMap[anchorNodeKey])) {
+    const anchorNode = state.nodeMap[anchorNodeKey]
+    isBold = anchorNode.marks.some((m) => m === 'bold')
+    isItalic = anchorNode.marks.some((m) => m === 'italic')
+    isUnderline = anchorNode.marks.some((m) => m === 'underline')
+  }
+
   return (
-    <section>
-      <ToolBarBtn isSelected={false} onSelect={() => {}}>
+    <section className="flex gap-2">
+      <ToolBarBtn
+        isSelected={!!isBold}
+        onSelect={() => {
+          if (!anchorNodeKey) return
+          dispatch({
+            type: 'toggleMark',
+            mark: 'bold',
+            targetNodeKey: anchorNodeKey,
+            origin: 'toolbar',
+          })
+        }}
+      >
         <MdFormatBold />
       </ToolBarBtn>
-      <div></div>
+      <ToolBarBtn isSelected={!!isItalic} onSelect={() => {}}>
+        <MdFormatItalic />
+      </ToolBarBtn>
+      <ToolBarBtn isSelected={!!isUnderline} onSelect={() => {}}>
+        <MdFormatUnderlined />
+      </ToolBarBtn>
     </section>
   )
 }

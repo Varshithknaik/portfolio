@@ -3,6 +3,7 @@ import {
   EditorSelection,
   EditorState,
   ElementNode,
+  Mark,
   NodeKey,
   NodeMap,
   TextNode,
@@ -50,6 +51,9 @@ export function applyTransaction(
     }
     case 'deleteText': {
       return deleteTextSelection(state)
+    }
+    case 'toggleMark': {
+      return toggleMark(state, transaction.mark, transaction.targetNodeKey)
     }
 
     default:
@@ -497,4 +501,23 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   if (!textRange) return null
 
   return replaceTextRange(state, textRange, '')
+}
+
+const toggleMark = (state: EditorState, mark: Mark, nodeKey: NodeKey) => {
+  const node = state.nodeMap[nodeKey]
+  if (!node || !isTextNode(node)) return null
+
+  const hasMark = node.marks.includes(mark)
+  const nextMarks = hasMark
+    ? node.marks.filter((m) => m !== mark)
+    : [...node.marks, mark]
+
+  const nextNodeMap = {
+    ...state.nodeMap,
+    [nodeKey]: { ...node, marks: nextMarks },
+  }
+  const nextState = { ...state, nodeMap: nextNodeMap }
+
+  const normalizedState = normalizeDocument(nextState)
+  return remapSelectionAfterNormalization(nextState, normalizedState)
 }

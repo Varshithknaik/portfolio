@@ -68,7 +68,12 @@ export type Transaction =
       text: string
       origin: 'keyboard'
     }
-  | { type: 'toggleMark'; mark: Mark; origin: 'toolbar' }
+  | {
+      type: 'toggleMark'
+      mark: Mark
+      targetNodeKey: NodeKey
+      origin: 'toolbar'
+    }
   | {
       type: 'setBlockType'
       blockType: BlockType

@@ -82,6 +82,12 @@ export function RichTextEditorStarter() {
     throw new Error('Root is not an element node')
   }
 
+  const handleToolbar = (transaction: Transaction) => {
+    const newState = applyTransaction(latestStateRef.current, transaction)
+    if (!newState) return
+    setState(newState)
+  }
+
   return (
     <div
       onClick={() => editorRef.current?.focus()}
@@ -91,7 +97,7 @@ export function RichTextEditorStarter() {
         onClick={(e) => e.stopPropagation()}
         className="border-b border-line/50 px-2.5 py-1.5 flex items-center gap-1 bg-[var(--color-bg)]/50 backdrop-blur-sm"
       >
-        <ToolBar />
+        <ToolBar state={state} dispatch={handleToolbar} />
       </div>
 
       <div
