@@ -1,3 +1,4 @@
+import { anchor } from 'mermaid/dist/rendering-util/rendering-elements/shapes/anchor.js'
 import {
   EditorSelection,
   EditorState,
@@ -24,6 +25,21 @@ export const createCaretSelection = (
     focusNode: node,
     focusOffset: offset,
     type: 'caret',
+  }
+}
+
+export const createRangeSelection = ({
+  anchorNode,
+  anchorOffset,
+  focusNode,
+  focusOffset,
+}: Omit<EditorSelection, 'type'>): EditorSelection => {
+  return {
+    anchorNode,
+    anchorOffset,
+    focusNode,
+    focusOffset,
+    type: 'range',
   }
 }
 

@@ -10,9 +10,13 @@ import {
   Transaction,
 } from '../type/schema'
 import { isElementNode, isTextNode } from './nodeUtils'
-import { createBoundaryTextNodes } from './boundaryTextNodes'
+import {
+  createReplacementBoundaryNodes,
+  splitNodesForMarkRange,
+} from './boundaryTextNodes'
 import {
   createCaretSelection,
+  createRangeSelection,
   normalizeDocument,
   remapSelectionAfterNormalization,
 } from './normalizer'
@@ -210,7 +214,7 @@ const replaceInSingleParent = (
   const { start, end, commonAncestor } = range
 
   const { updatedStartNode, updatedEndNode, nextOffset } =
-    createBoundaryTextNodes(start, end, replacementText)
+    createReplacementBoundaryNodes(start, end, replacementText)
 
   const nextChildren = [
     ...commonAncestor.children.slice(0, start.index + 1),
@@ -274,7 +278,13 @@ const replaceInSiblingBlocks = (
     return null
 
   const { updatedStartNode, updatedEndNode, nextOffset } =
-    createBoundaryTextNodes(start, end, replacementText, startParentNode.key)
+    createReplacementBoundaryNodes(
+      start,
+      end,
+      replacementText,
+      startParentNode.key
+    )
+
   const startNodeIndex = commonAncestor.children.indexOf(startParentNodeKey)
   const endNodeIndex = commonAncestor.children.indexOf(endParentNodeKey)
   const isValidIndex = startNodeIndex >= 0 && endNodeIndex > startNodeIndex
@@ -471,22 +481,22 @@ const toggleMark = (state: EditorState, mark: Mark) => {
   const crossBlockTextRange = resolveTreeTextRange(state)
   if (!crossBlockTextRange) return null
 
-  const { start, startPath, endPath } = crossBlockTextRange
+  const { start, end, commonAncestor } = crossBlockTextRange
 
-  const startBlock = state.nodeMap[startPath[0]]
-  const endBlock = state.nodeMap[endPath[0]]
+  const policy = getReplacementPolicy(state, crossBlockTextRange)
+  if (!policy) return null
 
-  if (
-    !startBlock ||
-    !endBlock ||
-    !isElementNode(startBlock) ||
-    !isElementNode(endBlock) ||
-    !haveCompatibleBlockKinds(startBlock, endBlock)
-  ) {
-    return null
-  }
+  const splitNodes = splitNodesForMarkRange(start, end)
+  if (!splitNodes) return null
 
-  const node = start.node
+  const nextChildren = [
+    ...commonAncestor.children.slice(0, start.index + 1),
+    splitNodes.updatedMiddleNode.key,
+    splitNodes.updatedEndNode.key,
+    ...commonAncestor.children.slice(end.index + 1),
+  ]
+
+  const node = splitNodes.updatedMiddleNode
   if (!isTextNode(node)) return null
 
   const hasMark = node.marks.includes(mark)
@@ -494,12 +504,37 @@ const toggleMark = (state: EditorState, mark: Mark) => {
     ? node.marks.filter((m) => m !== mark)
     : [...node.marks, mark]
 
+  const formattedMiddleNode: TextNode = {
+    ...splitNodes.updatedMiddleNode,
+    marks: nextMarks,
+  }
+
   const nextNodeMap = {
     ...state.nodeMap,
-    [node.key]: { ...node, marks: nextMarks },
+    [splitNodes.updatedStartNode.key]: splitNodes.updatedStartNode,
+    [splitNodes.updatedMiddleNode.key]: formattedMiddleNode,
+    [splitNodes.updatedEndNode.key]: splitNodes.updatedEndNode,
+    [commonAncestor.key]: {
+      ...commonAncestor,
+      children: nextChildren,
+    },
   }
-  const nextState = { ...state, nodeMap: nextNodeMap }
 
-  const normalizedState = normalizeDocument(nextState)
-  return remapSelectionAfterNormalization(nextState, normalizedState)
+  const nextSelection = createRangeSelection({
+    anchorNode: formattedMiddleNode,
+    anchorOffset: 0,
+    focusNode: formattedMiddleNode,
+    focusOffset: formattedMiddleNode.text.length,
+  })
+
+  const nextState = {
+    ...state,
+    nodeMap: nextNodeMap,
+    selection: nextSelection,
+  }
+
+  return nextState
+
+  // const normalizedState = normalizeDocument(nextState)
+  // return normalizedState
 }
