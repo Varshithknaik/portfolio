@@ -71,7 +71,6 @@ export type Transaction =
   | {
       type: 'toggleMark'
       mark: Mark
-      targetNodeKey: NodeKey
       origin: 'toolbar'
     }
   | {

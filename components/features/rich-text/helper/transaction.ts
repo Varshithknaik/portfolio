@@ -9,7 +9,8 @@ import {
   TextNode,
   Transaction,
 } from '../type/schema'
-import { createKey, isElementNode, isTextNode } from './nodeUtils'
+import { isElementNode, isTextNode } from './nodeUtils'
+import { createBoundaryTextNodes } from './boundaryTextNodes'
 import {
   createCaretSelection,
   normalizeDocument,
@@ -33,12 +34,6 @@ type TreeTextRange = {
 
 type ReplacementPolicy = 'same-parent' | 'sibling-block-merge'
 
-type BoundaryTextNodes = {
-  updatedStartNode: TextNode
-  updatedEndNode: TextNode
-  nextOffset: number
-}
-
 const maxDepth = 32
 
 export function applyTransaction(
@@ -53,7 +48,7 @@ export function applyTransaction(
       return deleteTextSelection(state)
     }
     case 'toggleMark': {
-      return toggleMark(state, transaction.mark, transaction.targetNodeKey)
+      return toggleMark(state, transaction.mark)
     }
 
     default:
@@ -258,37 +253,6 @@ const replaceInSingleParent = (
 
 const getPointParentKey = (range: TreeTextRange, path: NodeKey[]): NodeKey =>
   path.length === 1 ? range.commonAncestor.key : path[path.length - 2]
-
-const createBoundaryTextNodes = (
-  start: TextPoint,
-  end: TextPoint,
-  replacementText: string,
-  endParentKey?: NodeKey
-): BoundaryTextNodes => {
-  const startPrefix = start.node.text.slice(0, start.offset)
-  const endSuffix = end.node.text.slice(end.offset)
-
-  const updatedStartNode: TextNode = {
-    ...start.node,
-    text: startPrefix + replacementText,
-  }
-
-  const newEndNodeKey = createKey('t')
-  const updatedEndNode: TextNode = {
-    ...end.node,
-    key: newEndNodeKey,
-    parent: endParentKey ?? end.node.parent,
-    text: endSuffix,
-  }
-
-  const nextOffset = startPrefix.length + replacementText.length
-
-  return {
-    updatedStartNode,
-    updatedEndNode,
-    nextOffset,
-  }
-}
 
 const replaceInSiblingBlocks = (
   range: TreeTextRange,
@@ -503,9 +467,27 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   return replaceTextRange(state, textRange, '')
 }
 
-const toggleMark = (state: EditorState, mark: Mark, nodeKey: NodeKey) => {
-  const node = state.nodeMap[nodeKey]
-  if (!node || !isTextNode(node)) return null
+const toggleMark = (state: EditorState, mark: Mark) => {
+  const crossBlockTextRange = resolveTreeTextRange(state)
+  if (!crossBlockTextRange) return null
+
+  const { start, startPath, endPath } = crossBlockTextRange
+
+  const startBlock = state.nodeMap[startPath[0]]
+  const endBlock = state.nodeMap[endPath[0]]
+
+  if (
+    !startBlock ||
+    !endBlock ||
+    !isElementNode(startBlock) ||
+    !isElementNode(endBlock) ||
+    !haveCompatibleBlockKinds(startBlock, endBlock)
+  ) {
+    return null
+  }
+
+  const node = start.node
+  if (!isTextNode(node)) return null
 
   const hasMark = node.marks.includes(mark)
   const nextMarks = hasMark
@@ -514,7 +496,7 @@ const toggleMark = (state: EditorState, mark: Mark, nodeKey: NodeKey) => {
 
   const nextNodeMap = {
     ...state.nodeMap,
-    [nodeKey]: { ...node, marks: nextMarks },
+    [node.key]: { ...node, marks: nextMarks },
   }
   const nextState = { ...state, nodeMap: nextNodeMap }
 

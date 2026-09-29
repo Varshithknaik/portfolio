@@ -46,7 +46,6 @@ export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
       dispatch({
         type: 'toggleMark',
         mark: key,
-        targetNodeKey: commonNodeKey,
         origin: 'toolbar',
       })
     } else if (key === 'paragraph') {
