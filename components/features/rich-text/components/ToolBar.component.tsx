@@ -41,7 +41,6 @@ export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
   const commonNodeKey = isSameNode ? anchorNodeKey : null
 
   const handleToolbarButtonClick = (key: ToolbarKey) => {
-    if (!commonNodeKey) return
     if (key === 'bold' || key === 'italic' || key === 'underline') {
       dispatch({
         type: 'toggleMark',

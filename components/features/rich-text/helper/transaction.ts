@@ -274,15 +274,12 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   return replaceTextRange(state, textRange, '')
 }
 
-const toggleMark = (state: EditorState, mark: Mark) => {
-  const crossBlockTextRange = resolveTreeTextRange(state)
-  if (!crossBlockTextRange) return null
-
-  const { start, end, commonAncestor } = crossBlockTextRange
-
-  const policy = getReplacementPolicy(state, crossBlockTextRange)
-  if (!policy) return null
-
+const toggleMarkInSingleParent = (
+  state: EditorState,
+  range: TreeTextRange,
+  mark: Mark
+): EditorState | null => {
+  const { start, end, commonAncestor } = range
   const splitNodes = splitNodesForMarkRange(start, end)
   if (!splitNodes) return null
 
@@ -331,7 +328,33 @@ const toggleMark = (state: EditorState, mark: Mark) => {
   }
 
   return nextState
+}
 
-  // const normalizedState = normalizeDocument(nextState)
-  // return normalizedState
+const toggleMarkInSiblingBlocks = (
+  state: EditorState,
+  range: TreeTextRange,
+  mark: Mark
+): EditorState | null => {
+  return null
+}
+
+const toggleMark = (state: EditorState, mark: Mark) => {
+  const crossBlockTextRange = resolveTreeTextRange(state)
+  if (!crossBlockTextRange) return null
+
+  const range = crossBlockTextRange
+
+  const policy = getReplacementPolicy(state, crossBlockTextRange)
+
+  if (!policy) return null
+
+  if (policy === 'same-parent') {
+    return toggleMarkInSingleParent(state, range, mark)
+  }
+
+  if (policy === 'sibling-block-merge') {
+    return toggleMarkInSiblingBlocks(state, range, mark)
+  }
+
+  return null
 }
