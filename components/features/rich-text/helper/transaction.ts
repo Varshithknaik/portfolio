@@ -335,6 +335,8 @@ const toggleMarkInSiblingBlocks = (
   range: TreeTextRange,
   mark: Mark
 ): EditorState | null => {
+  const { start, end, commonAncestor } = range
+
   return null
 }
 
