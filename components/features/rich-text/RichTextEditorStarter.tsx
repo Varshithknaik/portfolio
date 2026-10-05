@@ -24,23 +24,22 @@ export function RichTextEditorStarter() {
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
 
-    if (isModifier && ['b', 'i', 'u'].includes(key)) {
-      const markMap: Record<string, Mark> = {
-        b: 'bold',
-        i: 'italic',
-        u: 'underline',
-      }
+    const markMap: Record<string, Mark> = {
+      b: 'bold',
+      i: 'italic',
+      u: 'underline',
+    }
+
+    if (isModifier && markMap[key]) {
       const transaction: Transaction = {
         type: 'toggleMark',
         mark: markMap[key],
         origin: 'keyboard',
       }
-      handleToolbar(transaction)
+      const nextState = applyTransaction(latestStateRef.current, transaction)
+      if (!nextState) return
       event.preventDefault()
-    }
-
-    if (isModifier && ['z', 'k', 'd', 'x', 'v'].includes(key)) {
-      event.preventDefault()
+      setState(nextState)
     }
   }
 
