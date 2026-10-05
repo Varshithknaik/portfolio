@@ -2,7 +2,7 @@
 
 import { KeyboardEventHandler, useEffect, useRef, useState } from 'react'
 import { createInitState, isElementNode } from './helper/nodeUtils'
-import { EditorState, Transaction } from './type/schema'
+import { EditorState, Mark, Transaction } from './type/schema'
 import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
 import { useSelection } from './hooks/useSelection'
@@ -24,7 +24,22 @@ export function RichTextEditorStarter() {
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
 
-    if (isModifier && ['b', 'i', 'u', 'z', 'k', 'd', 'x', 'v'].includes(key)) {
+    if (isModifier && ['b', 'i', 'u'].includes(key)) {
+      const markMap: Record<string, Mark> = {
+        b: 'bold',
+        i: 'italic',
+        u: 'underline',
+      }
+      const transaction: Transaction = {
+        type: 'toggleMark',
+        mark: markMap[key],
+        origin: 'keyboard',
+      }
+      handleToolbar(transaction)
+      event.preventDefault()
+    }
+
+    if (isModifier && ['z', 'k', 'd', 'x', 'v'].includes(key)) {
       event.preventDefault()
     }
   }

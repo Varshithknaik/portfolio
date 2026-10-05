@@ -71,7 +71,7 @@ export type Transaction =
   | {
       type: 'toggleMark'
       mark: Mark
-      origin: 'toolbar'
+      origin: 'toolbar' | 'keyboard'
     }
   | {
       type: 'setBlockType'
