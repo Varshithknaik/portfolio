@@ -24,9 +24,9 @@ export type TreeTextRange = {
 }
 
 export type ReplacementPolicy = 'same-parent' | 'sibling-block-merge'
+export type MarkPolicy = 'same-block' | 'sibling-blocks'
 
 const maxDepth = 32
-
 const resolveTextNode = (
   key: NodeKey | undefined,
   nodeMap: NodeMap,
@@ -170,7 +170,11 @@ export const resolveTreeTextRange = (
 export const getPointParentKey = (
   range: TreeTextRange,
   path: NodeKey[]
-): NodeKey => (path.length === 1 ? range.commonAncestor.key : path[path.length - 2])
+): NodeKey => {
+  return path.length === 1
+    ? range.commonAncestor.key
+    : path[path.length - 2] || range.commonAncestor.key
+}
 
 const haveCompatibleBlockKinds = (a: ElementNode, b: ElementNode): boolean => {
   if (a.type !== b.type) return false
@@ -205,6 +209,34 @@ export const getReplacementPolicy = (
     haveCompatibleBlockKinds(startBlock, endBlock)
   ) {
     return 'sibling-block-merge'
+  }
+
+  return null
+}
+
+export const getMarkPolicy = (
+  state: EditorState,
+  range: TreeTextRange
+): MarkPolicy | null => {
+  if (range.startPath.length === 1 && range.endPath.length === 1) {
+    return 'same-block'
+  }
+
+  const isSiblingBlocks =
+    range.startPath.length === 2 && range.endPath.length === 2
+  if (!isSiblingBlocks) return null
+
+  const startBlock = state.nodeMap[range.startPath[0]]
+  const endBlock = state.nodeMap[range.endPath[0]]
+
+  if (
+    startBlock &&
+    endBlock &&
+    isElementNode(startBlock) &&
+    isElementNode(endBlock) &&
+    haveCompatibleBlockKinds(startBlock, endBlock)
+  ) {
+    return 'sibling-blocks'
   }
 
   return null

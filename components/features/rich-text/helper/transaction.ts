@@ -6,7 +6,7 @@ import {
   TextNode,
   Transaction,
 } from '../type/schema'
-import { isElementNode, isTextNode } from './nodeUtils'
+import { createKey, isElementNode, isTextNode } from './nodeUtils'
 import {
   createReplacementBoundaryNodes,
   splitNodesForMarkRange,
@@ -18,6 +18,7 @@ import {
   remapSelectionAfterNormalization,
 } from './normalizer'
 import {
+  getMarkPolicy,
   getPointParentKey,
   getReplacementPolicy,
   resolveTreeTextRange,
@@ -274,7 +275,7 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
   return replaceTextRange(state, textRange, '')
 }
 
-const toggleMarkInSingleParent = (
+const toggleMarkInSameBlock = (
   state: EditorState,
   range: TreeTextRange,
   mark: Mark
@@ -330,12 +331,94 @@ const toggleMarkInSingleParent = (
   return nextState
 }
 
+const getDescendantTextKeys = (
+  state: EditorState,
+  parent: NodeKey
+): NodeKey[] => {
+  const parentNode = state.nodeMap[parent]
+  if (!parentNode || !isElementNode(parentNode)) return []
+
+  const textKeys: NodeKey[] = []
+  for (const key of parentNode.children) {
+    const childNode = state.nodeMap[key]
+    if (!childNode) continue
+
+    if (isTextNode(childNode)) {
+      textKeys.push(key)
+    } else if (isElementNode(childNode)) {
+      textKeys.push(...getDescendantTextKeys(state, key))
+    }
+  }
+  return textKeys
+}
+
 const toggleMarkInSiblingBlocks = (
   state: EditorState,
   range: TreeTextRange,
   mark: Mark
 ): EditorState | null => {
-  const { start, end, commonAncestor } = range
+  const { start, end, commonAncestor, startPath, endPath } = range
+
+  const startParentNodeKey: NodeKey = getPointParentKey(range, startPath)
+  const startParentNode = state.nodeMap[startParentNodeKey]
+  const endParentNodeKey: NodeKey = getPointParentKey(range, endPath)
+  const endParentNode = state.nodeMap[endParentNodeKey]
+
+  if (
+    !startParentNode ||
+    !isElementNode(startParentNode) ||
+    !endParentNode ||
+    !isElementNode(endParentNode)
+  )
+    return null
+
+  const startPrefix = start.node.text.slice(0, start.offset)
+  const startSuffix = start.node.text.slice(start.offset)
+
+  const endPrefix = end.node.text.slice(0, end.offset)
+  const endSuffix = end.node.text.slice(end.offset)
+  // start's cursors to end make new mark with its existing mark and make it as the new children + inbettween elemets + end
+  const startPrefixNode: TextNode = {
+    ...start.node,
+    text: startPrefix,
+  }
+
+  const startSuffixKey = createKey('t')
+  const startSuffixNode: TextNode = {
+    ...start.node,
+    // this will the new node
+    key: startSuffixKey,
+    text: startSuffix,
+  }
+
+  const endPrefixKey = createKey('t')
+  const endPrefixNode: TextNode = {
+    ...end.node,
+    key: endPrefixKey,
+    text: endPrefix,
+  }
+  const endSuffixNode: TextNode = {
+    ...end.node,
+    text: endSuffix,
+  }
+
+  const inBetweenElements = commonAncestor.children.slice(
+    start.index + 1,
+    end.index + 1
+  )
+
+  console.log(inBetweenElements)
+
+  const descendantTextKeys = getDescendantTextKeys(state, commonAncestor.key)
+  const descendantNodes: TextNode[] = descendantTextKeys
+    .map((key) => state.nodeMap[key])
+    .filter((node) => node && isTextNode(node))
+
+  const isAllMarksSame = [
+    startSuffixNode,
+    ...descendantNodes,
+    endPrefixNode,
+  ].every((node) => node.marks.includes(mark))
 
   return null
 }
@@ -346,15 +429,15 @@ const toggleMark = (state: EditorState, mark: Mark) => {
 
   const range = crossBlockTextRange
 
-  const policy = getReplacementPolicy(state, crossBlockTextRange)
+  const policy = getMarkPolicy(state, crossBlockTextRange)
 
   if (!policy) return null
 
-  if (policy === 'same-parent') {
-    return toggleMarkInSingleParent(state, range, mark)
+  if (policy === 'same-block') {
+    return toggleMarkInSameBlock(state, range, mark)
   }
 
-  if (policy === 'sibling-block-merge') {
+  if (policy === 'sibling-blocks') {
     return toggleMarkInSiblingBlocks(state, range, mark)
   }
 
