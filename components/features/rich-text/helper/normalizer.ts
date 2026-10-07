@@ -278,6 +278,8 @@ export function remapSelectionAfterNormalization(
     before.selection.focusOffset
   )
 
+  console.log(anchor, focus, 'anchor and focus', before, after)
+
   if (anchor && focus) {
     return {
       ...after,
@@ -310,6 +312,8 @@ export function remapSelectionAfterNormalization(
   const fallback = selectedKey
     ? findFallbackTextPoint(before, after, selectedKey)
     : null
+
+  console.log(fallback, 'fallback')
 
   return {
     ...after,

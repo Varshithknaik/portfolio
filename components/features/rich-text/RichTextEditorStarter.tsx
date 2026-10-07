@@ -37,8 +37,10 @@ export function RichTextEditorStarter() {
         origin: 'keyboard',
       }
       const nextState = applyTransaction(latestStateRef.current, transaction)
-      if (!nextState) return
+
       event.preventDefault()
+
+      if (!nextState) return
       setState(nextState)
     }
   }

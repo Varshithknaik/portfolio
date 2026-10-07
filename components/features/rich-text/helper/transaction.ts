@@ -463,5 +463,8 @@ const toggleMark = (state: EditorState, mark: Mark): EditorState | null => {
     return null
   }
 
-  return nextEditorState
+  if (!nextEditorState) return null
+
+  const normalizedState = normalizeDocument(nextEditorState)
+  return remapSelectionAfterNormalization(nextEditorState, normalizedState)
 }
