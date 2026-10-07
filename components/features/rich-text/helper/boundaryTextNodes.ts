@@ -1,6 +1,7 @@
 import { create } from 'node:domain'
-import { NodeKey, TextNode } from '../type/schema'
-import { createKey } from './nodeUtils'
+import { EditorState, NodeKey, NodeMap, TextNode } from '../type/schema'
+import { createKey, isElementNode, isTextNode } from './nodeUtils'
+import { TextPoint } from './textRange'
 
 export type BoundaryTextPoint = {
   node: TextNode
@@ -15,7 +16,7 @@ export type BoundaryTextNodes = {
 
 export type SplitNodes = {
   updatedStartNode: TextNode
-  updatedMiddleNode: TextNode
+  updatedMiddleNodes: TextNode[]
   updatedEndNode: TextNode
 }
 
@@ -49,38 +50,88 @@ export const createReplacementBoundaryNodes = (
 }
 
 export const splitNodesForMarkRange = (
-  start: BoundaryTextPoint,
-  end: BoundaryTextPoint,
+  start: TextPoint,
+  end: TextPoint,
+  nodeMap: NodeMap,
   endParentKey?: NodeKey
 ): SplitNodes | null => {
-  const startPrefix = start.node.text.slice(0, start.offset)
-  const middleText = start.node.text.slice(start.offset, end.offset)
-  const endSuffix = end.node.text.slice(end.offset)
+  // Check for if the start and end node are same or not
+  let updatedStartNode: TextNode
+  let updatedMiddleNodes: TextNode[]
+  let updatedEndNode: TextNode
 
-  const updatedStartNode: TextNode = {
-    ...start.node,
-    text: startPrefix,
-  }
+  if (start.node.key === end.node.key) {
+    const startPrefix = start.node.text.slice(0, start.offset)
+    const middleText = start.node.text.slice(start.offset, end.offset)
+    const endSuffix = end.node.text.slice(end.offset)
 
-  const newMiddleNodeKey = createKey('t')
-  const updatedMiddleNode: TextNode = {
-    ...start.node,
-    key: newMiddleNodeKey,
-    parent: endParentKey ?? end.node.parent,
-    text: middleText,
-  }
+    updatedStartNode = {
+      ...start.node,
+      text: startPrefix,
+    }
 
-  const newEndNodeKey = createKey('t')
-  const updatedEndNode: TextNode = {
-    ...end.node,
-    key: newEndNodeKey,
-    parent: endParentKey ?? end.node.parent,
-    text: endSuffix,
+    updatedMiddleNodes = [
+      {
+        ...start.node,
+        key: createKey('t'),
+        parent: endParentKey ?? end.node.parent,
+        text: middleText,
+      },
+    ]
+
+    updatedEndNode = {
+      ...end.node,
+      key: createKey('t'),
+      parent: endParentKey ?? end.node.parent,
+      text: endSuffix,
+    }
+  } else if (start.node.parent && start.node.parent === end.node.parent) {
+    const parentNode = nodeMap[start.node.parent]
+    if (!isElementNode(parentNode)) return null
+
+    const startPrefix = start.node.text.slice(0, start.offset)
+    const startSuffix = start.node.text.slice(start.offset)
+
+    const endPrefix = end.node.text.slice(0, end.offset)
+    const endSuffix = end.node.text.slice(end.offset)
+
+    updatedStartNode = {
+      ...start.node,
+      text: startPrefix,
+    }
+
+    updatedEndNode = {
+      ...end.node,
+      key: createKey('t'),
+      parent: endParentKey ?? end.node.parent,
+      text: endSuffix,
+    }
+
+    updatedMiddleNodes = [
+      {
+        ...start.node,
+        key: createKey('t'),
+        parent: endParentKey ?? end.node.parent,
+        text: startSuffix,
+      },
+      ...parentNode.children
+        .slice(start.index + 1, end.index)
+        .map((key) => nodeMap[key])
+        .filter(isTextNode),
+      {
+        ...end.node,
+        key: createKey('t'),
+        parent: endParentKey ?? end.node.parent,
+        text: endPrefix,
+      },
+    ]
+  } else {
+    return null
   }
 
   return {
     updatedStartNode,
-    updatedMiddleNode,
+    updatedMiddleNodes,
     updatedEndNode,
   }
 }

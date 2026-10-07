@@ -3,10 +3,16 @@ import {
   EditorState,
   Mark,
   NodeKey,
+  NodeMap,
   TextNode,
   Transaction,
 } from '../type/schema'
-import { createKey, isElementNode, isTextNode } from './nodeUtils'
+import {
+  canonicalizeMarks,
+  createKey,
+  isElementNode,
+  isTextNode,
+} from './nodeUtils'
 import {
   createReplacementBoundaryNodes,
   splitNodesForMarkRange,
@@ -281,33 +287,44 @@ const toggleMarkInSameBlock = (
   mark: Mark
 ): EditorState | null => {
   const { start, end, commonAncestor } = range
-  const splitNodes = splitNodesForMarkRange(start, end)
+  const splitNodes = splitNodesForMarkRange(start, end, state.nodeMap)
   if (!splitNodes) return null
 
   const nextChildren = [
     ...commonAncestor.children.slice(0, start.index + 1),
-    splitNodes.updatedMiddleNode.key,
+    ...splitNodes.updatedMiddleNodes.map((node) => node.key),
     splitNodes.updatedEndNode.key,
     ...commonAncestor.children.slice(end.index + 1),
   ]
 
-  const node = splitNodes.updatedMiddleNode
-  if (!isTextNode(node)) return null
+  const filteredTextNodes: TextNode[] =
+    splitNodes.updatedMiddleNodes.filter(isTextNode)
 
-  const hasMark = node.marks.includes(mark)
-  const nextMarks = hasMark
-    ? node.marks.filter((m) => m !== mark)
-    : [...node.marks, mark]
+  if (filteredTextNodes.length === 0) return null
 
-  const formattedMiddleNode: TextNode = {
-    ...splitNodes.updatedMiddleNode,
-    marks: nextMarks,
-  }
+  const hasMark = filteredTextNodes.every((node) => node.marks.includes(mark))
 
-  const nextNodeMap = {
+  const formattedMiddleTextNodes: TextNode[] = filteredTextNodes.map((node) => {
+    return {
+      ...node,
+      marks: hasMark
+        ? node.marks.filter((m) => m !== mark)
+        : canonicalizeMarks([...node.marks, mark]),
+    }
+  })
+
+  const newFormattedMiddleNodes: NodeMap = formattedMiddleTextNodes.reduce(
+    (acc, node) => ({
+      ...acc,
+      [node.key]: node,
+    }),
+    {}
+  )
+
+  const nextNodeMap: NodeMap = {
     ...state.nodeMap,
     [splitNodes.updatedStartNode.key]: splitNodes.updatedStartNode,
-    [splitNodes.updatedMiddleNode.key]: formattedMiddleNode,
+    ...newFormattedMiddleNodes,
     [splitNodes.updatedEndNode.key]: splitNodes.updatedEndNode,
     [commonAncestor.key]: {
       ...commonAncestor,
@@ -315,11 +332,15 @@ const toggleMarkInSameBlock = (
     },
   }
 
-  const nextSelection = createRangeSelection({
-    anchorNode: formattedMiddleNode,
+  const nextStartNode = formattedMiddleTextNodes[0]
+  const nextEndNode =
+    formattedMiddleTextNodes[formattedMiddleTextNodes.length - 1]
+
+  const nextSelection: EditorSelection = createRangeSelection({
+    anchorNode: nextStartNode,
     anchorOffset: 0,
-    focusNode: formattedMiddleNode,
-    focusOffset: formattedMiddleNode.text.length,
+    focusNode: nextEndNode,
+    focusOffset: nextEndNode.text.length,
   })
 
   const nextState = {
@@ -423,8 +444,9 @@ const toggleMarkInSiblingBlocks = (
   return null
 }
 
-const toggleMark = (state: EditorState, mark: Mark) => {
+const toggleMark = (state: EditorState, mark: Mark): EditorState | null => {
   const crossBlockTextRange = resolveTreeTextRange(state)
+  let nextEditorState: EditorState | null = null
   if (!crossBlockTextRange) return null
 
   const range = crossBlockTextRange
@@ -434,12 +456,12 @@ const toggleMark = (state: EditorState, mark: Mark) => {
   if (!policy) return null
 
   if (policy === 'same-block') {
-    return toggleMarkInSameBlock(state, range, mark)
+    nextEditorState = toggleMarkInSameBlock(state, range, mark)
+  } else if (policy === 'sibling-blocks') {
+    nextEditorState = toggleMarkInSiblingBlocks(state, range, mark)
+  } else {
+    return null
   }
 
-  if (policy === 'sibling-blocks') {
-    return toggleMarkInSiblingBlocks(state, range, mark)
-  }
-
-  return null
+  return nextEditorState
 }
