@@ -1,5 +1,6 @@
 import { anchor } from 'mermaid/dist/rendering-util/rendering-elements/shapes/anchor.js'
 import {
+  EditorNode,
   EditorSelection,
   EditorState,
   NodeKey,
@@ -14,6 +15,11 @@ import {
   isTextNode,
   sameMarks,
 } from './nodeUtils'
+
+type LogicalPoint = {
+  blockKey: NodeKey
+  offset: number
+}
 
 export const createCaretSelection = (
   node: TextNode,
@@ -259,23 +265,62 @@ export function findFallbackTextPoint(
   return null
 }
 
+function captureBlockOffset(
+  before: EditorState,
+  anchorNode: EditorNode | null,
+  anchorOffset: number
+): LogicalPoint | null {
+  if (!anchorNode || !isTextNode(anchorNode)) {
+    return null
+  }
+
+  const parentKey = anchorNode.parent
+  if (!parentKey) return null
+
+  const parentNode = before.nodeMap[parentKey]
+  if (!parentNode || !isElementNode(parentNode)) return null
+
+  const index = parentNode.children.indexOf(anchorNode.key)
+
+  let offset = 0
+
+  for (let idx = index - 1; idx >= 0; idx--) {
+    const previous = before.nodeMap[parentNode.children[idx]]
+    if (previous && isTextNode(previous)) {
+      offset += previous.text.length
+    }
+  }
+
+  return {
+    blockKey: parentKey,
+    offset: offset + anchorOffset,
+  }
+}
+
+function resolveBlockOffset(after: EditorState, logicalPoint: LogicalPoint) {
+  const blockKey = after.nodeMap[logicalPoint.blockKey]
+
+  const remainingOffset = logicalPoint.offset
+}
+
 export function remapSelectionAfterNormalization(
   before: EditorState,
   after: EditorState
 ): EditorState {
-  if (!before.selection) return after
+  const { selection } = before
+  if (!selection) return after
 
   //check if anchorNode Survived
   const anchor = getSurvivingNodeText(
     after.nodeMap,
-    before.selection.anchorNode?.key,
-    before.selection.anchorOffset
+    selection.anchorNode?.key,
+    selection.anchorOffset
   )
 
   const focus = getSurvivingNodeText(
     after.nodeMap,
-    before.selection.focusNode?.key,
-    before.selection.focusOffset
+    selection.focusNode?.key,
+    selection.focusOffset
   )
 
   console.log(anchor, focus, 'anchor and focus', before, after)
@@ -284,7 +329,7 @@ export function remapSelectionAfterNormalization(
     return {
       ...after,
       selection: {
-        type: before.selection.type,
+        type: selection.type,
         anchorNode: anchor.node,
         focusNode: focus.node,
         anchorOffset: anchor.offset,
@@ -292,6 +337,18 @@ export function remapSelectionAfterNormalization(
       },
     }
   }
+
+  const logicalAnchor = captureBlockOffset(
+    before,
+    selection.anchorNode,
+    selection.anchorOffset
+  )
+
+  const logicalFocus = captureBlockOffset(
+    before,
+    selection.focusNode,
+    selection.focusOffset
+  )
 
   const survivingNode = anchor ?? focus
 
@@ -308,7 +365,7 @@ export function remapSelectionAfterNormalization(
     }
   }
 
-  const selectedKey = before.selection.anchorNode?.key
+  const selectedKey = selection.anchorNode?.key
   const fallback = selectedKey
     ? findFallbackTextPoint(before, after, selectedKey)
     : null
