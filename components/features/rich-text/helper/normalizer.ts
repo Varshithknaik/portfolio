@@ -297,10 +297,27 @@ function captureBlockOffset(
   }
 }
 
-function resolveBlockOffset(after: EditorState, logicalPoint: LogicalPoint) {
+function resolveBlockOffset(
+  after: EditorState,
+  logicalPoint: LogicalPoint
+): { node: TextNode; offset: number } | null {
   const blockKey = after.nodeMap[logicalPoint.blockKey]
+  if (!blockKey || !isElementNode(blockKey)) return null
 
-  const remainingOffset = logicalPoint.offset
+  let remainingOffset = logicalPoint.offset
+
+  for (let idx = 0; idx < blockKey.children.length; idx++) {
+    const child = after.nodeMap[blockKey.children[idx]]
+
+    if (child && isTextNode(child)) {
+      if (remainingOffset <= child.text.length) {
+        return { node: child, offset: remainingOffset }
+      }
+      remainingOffset -= child.text.length
+    }
+  }
+
+  return null
 }
 
 export function remapSelectionAfterNormalization(
@@ -349,6 +366,24 @@ export function remapSelectionAfterNormalization(
     selection.focusNode,
     selection.focusOffset
   )
+
+  if (logicalAnchor && logicalFocus) {
+    const remapAnchor = resolveBlockOffset(after, logicalAnchor)
+    const remapFocus = resolveBlockOffset(after, logicalFocus)
+
+    if (remapAnchor && remapFocus) {
+      return {
+        ...after,
+        selection: {
+          type: selection.type,
+          anchorNode: remapAnchor.node,
+          focusNode: remapFocus.node,
+          anchorOffset: remapAnchor.offset,
+          focusOffset: remapFocus.offset,
+        },
+      }
+    }
+  }
 
   const survivingNode = anchor ?? focus
 
