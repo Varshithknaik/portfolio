@@ -1,10 +1,9 @@
-import { anchor } from 'mermaid/dist/rendering-util/rendering-elements/shapes/anchor.js'
 import {
   EditorNode,
   EditorSelection,
   EditorState,
   NodeKey,
-  NodeMap,
+  EditorNodeMap,
   TextNode,
 } from '../type/schema'
 import {
@@ -49,8 +48,8 @@ export const createRangeSelection = ({
   }
 }
 
-const removeNodeAndDescendents = (nodeMap: NodeMap, nodeKey: NodeKey) => {
-  const node = nodeMap[nodeKey]
+const removeNodeAndDescendents = (nodeMap: EditorNodeMap, nodeKey: NodeKey) => {
+  const node = nodeMap.get(nodeKey)
   if (!node) return
 
   if (isElementNode(node)) {
@@ -59,27 +58,23 @@ const removeNodeAndDescendents = (nodeMap: NodeMap, nodeKey: NodeKey) => {
     }
   }
 
-  delete nodeMap[nodeKey]
+  nodeMap.delete(nodeKey)
 }
 
 export function normalizeTextChildren(
-  nodeMap: NodeMap,
+  nodeMap: EditorNodeMap,
   parentKey: NodeKey
-): NodeMap {
-  const parent = nodeMap[parentKey]
+): EditorNodeMap {
+  const parent = nodeMap.get(parentKey)
   if (!parent || !isElementNode(parent)) return nodeMap
 
-  const nextMap: NodeMap = { ...nodeMap }
+  const nextMap: EditorNodeMap = new Map(nodeMap)
   const normalizedChildren: NodeKey[] = []
 
   for (const childKey of parent.children) {
-    const child = nextMap[childKey]
+    const child = nextMap.get(childKey)
 
     if (!child) continue
-
-    if (child.type === 'root') {
-      throw new Error('Root node should not be a child of any node')
-    }
 
     if (!isTextNode(child)) {
       removeNodeAndDescendents(nextMap, childKey)
@@ -97,11 +92,11 @@ export function normalizeTextChildren(
       marks: canonicalizeMarks(child.marks),
     }
 
-    nextMap[childKey] = normalizedChild
+    nextMap.set(childKey, normalizedChild)
 
     // Now check if previous is same
     const prevKey = normalizedChildren.at(-1)
-    const previous = prevKey ? nextMap[prevKey] : undefined
+    const previous = prevKey ? nextMap.get(prevKey) : undefined
 
     if (
       prevKey &&
@@ -156,7 +151,7 @@ export function normalizeDocument(state: EditorState): EditorState {
     throw new Error('Root node is not an element node')
   }
 
-  let nextMap: NodeMap = { ...nodeMap }
+  let nextMap: EditorNodeMap = { ...nodeMap }
   const rootChildren = root.children.filter((key) => {
     return !!nodeMap[key]
   })
@@ -197,7 +192,7 @@ export function normalizeDocument(state: EditorState): EditorState {
 }
 
 function getSurvivingNodeText(
-  nodeMap: NodeMap,
+  nodeMap: EditorNodeMap,
   nodeKey: NodeKey | undefined,
   offset: number
 ) {

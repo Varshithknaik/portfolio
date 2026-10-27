@@ -1,5 +1,5 @@
 import { create } from 'node:domain'
-import { EditorState, NodeKey, NodeMap, TextNode } from '../type/schema'
+import { EditorState, NodeKey, EditorNodeMap, TextNode } from '../type/schema'
 import { createKey, isElementNode, isTextNode } from './nodeUtils'
 import { TextPoint } from './textRange'
 
@@ -52,7 +52,7 @@ export const createReplacementBoundaryNodes = (
 export const splitNodesForMarkRange = (
   start: TextPoint,
   end: TextPoint,
-  nodeMap: NodeMap,
+  nodeMap: EditorNodeMap,
   endParentKey?: NodeKey
 ): SplitNodes | null => {
   // Check for if the start and end node are same or not

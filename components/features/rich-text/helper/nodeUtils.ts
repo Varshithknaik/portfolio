@@ -2,97 +2,128 @@ import {
   EditorNode,
   EditorState,
   ElementNode,
-  Mark,
-  NodeMap,
+  EditorNodeMap,
   RootNode,
   TextNode,
 } from '../type/schema'
+
+export const Format = {
+  Bold: 1 << 0,
+  Italic: 1 << 1,
+  Underline: 1 << 2,
+} as const
 
 // Can't use the crypto.randomUUID() on initial render as it cause the hydration error
 export const createInitState = (): EditorState => {
   const rootKey = 'root-key'
   const paragraphKey = 'paragraph-key'
   const paragraphKey2 = 'paragraph-key-2'
-
-  const nodeMap: NodeMap = {
-    [rootKey]: {
-      type: 'root',
-      key: rootKey,
-      parent: null,
-      children: [paragraphKey, paragraphKey2, 'p-1'],
-    },
-    [paragraphKey]: {
-      type: 'paragraph',
-      key: paragraphKey,
-      parent: rootKey,
-      children: ['t-empty', 't-1', 't-2', 't-3'],
-    },
-    [paragraphKey2]: {
-      type: 'paragraph',
-      key: paragraphKey2,
-      parent: rootKey,
-      children: ['t-1-2'],
-    },
-    't-empty': {
-      type: 'text',
-      key: 't-empty',
-      parent: paragraphKey,
-      text: '',
-      marks: [],
-    },
-    't-1': {
-      type: 'text',
-      key: 't-1',
-      parent: paragraphKey,
-      text: 'Hello ',
-      marks: ['bold'],
-    },
-    't-2': {
-      type: 'text',
-      key: 't-2',
-      parent: paragraphKey,
-      text: 'world',
-      marks: [],
-    },
-    'p-1': {
-      type: 'paragraph',
-      key: 'p-1',
-      parent: paragraphKey,
-      children: ['t-4', 't-5'],
-    },
-    't-4': {
-      type: 'text',
-      key: 't-4',
-      parent: 'p-1',
-      text: 'Hello ',
-      marks: ['bold'],
-    },
-    't-5': {
-      type: 'text',
-      key: 't-5',
-      parent: 'p-1',
-      text: 'world from diffrent paragraph',
-      marks: [],
-    },
-    't-3': {
-      type: 'text',
-      key: 't-3',
-      parent: paragraphKey,
-      text: ' people',
-      marks: ['italic'],
-    },
-    't-1-2': {
-      type: 'text',
-      key: 't-1-2',
-      parent: paragraphKey2,
-      text: 'Varshith from diffrent paragraph',
-      marks: ['italic'],
-    },
-  }
-
+  const paragraphKey3 = 'p-1'
+  const nodes: EditorNodeMap = new Map<NodeKey, EditorNode>([
+    [
+      rootKey,
+      {
+        type: 'element',
+        kind: 'root',
+        key: rootKey,
+        parent: null,
+        children: [paragraphKey, paragraphKey2, paragraphKey3],
+      },
+    ],
+    [
+      paragraphKey,
+      {
+        type: 'element',
+        kind: 'paragraph',
+        key: paragraphKey,
+        parent: rootKey,
+        children: ['t-1', 't-2', 't-3'],
+      },
+    ],
+    [
+      't-1',
+      {
+        type: 'text',
+        key: 't-1',
+        parent: paragraphKey,
+        text: 'Hello ',
+        format: Format.Bold,
+      },
+    ],
+    [
+      't-2',
+      {
+        type: 'text',
+        key: 't-2',
+        parent: paragraphKey,
+        text: 'world',
+        format: 0,
+      },
+    ],
+    [
+      't-3',
+      {
+        type: 'text',
+        key: 't-3',
+        parent: paragraphKey,
+        text: ' people',
+        format: Format.Italic,
+      },
+    ],
+    [
+      paragraphKey2,
+      {
+        type: 'element',
+        kind: 'paragraph',
+        key: paragraphKey2,
+        parent: rootKey,
+        children: ['t-1-2'],
+      },
+    ],
+    [
+      't-1-2',
+      {
+        type: 'text',
+        key: 't-1-2',
+        parent: paragraphKey2,
+        text: 'Varshith from different paragraph',
+        format: Format.Italic,
+      },
+    ],
+    [
+      paragraphKey3,
+      {
+        type: 'element',
+        kind: 'paragraph',
+        key: paragraphKey3,
+        parent: rootKey,
+        children: ['t-4', 't-5'],
+      },
+    ],
+    [
+      't-4',
+      {
+        type: 'text',
+        key: 't-4',
+        parent: paragraphKey3,
+        text: 'Hello ',
+        format: Format.Bold,
+      },
+    ],
+    [
+      't-5',
+      {
+        type: 'text',
+        key: 't-5',
+        parent: paragraphKey3,
+        text: 'world from different paragraph',
+        format: 0,
+      },
+    ],
+  ])
   return {
-    nodeMap,
-    rootKey: rootKey,
+    nodes,
+    rootNodeKey: rootKey,
     selection: null,
   }
 }

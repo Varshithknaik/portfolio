@@ -3,7 +3,7 @@ import {
   EditorState,
   Mark,
   NodeKey,
-  NodeMap,
+  EditorNodeMap,
   TextNode,
   Transaction,
 } from '../type/schema'
@@ -313,15 +313,16 @@ const toggleMarkInSameBlock = (
     }
   })
 
-  const newFormattedMiddleNodes: NodeMap = formattedMiddleTextNodes.reduce(
-    (acc, node) => ({
-      ...acc,
-      [node.key]: node,
-    }),
-    {}
-  )
+  const newFormattedMiddleNodes: EditorNodeMap =
+    formattedMiddleTextNodes.reduce(
+      (acc, node) => ({
+        ...acc,
+        [node.key]: node,
+      }),
+      {}
+    )
 
-  const nextNodeMap: NodeMap = {
+  const nextNodeMap: EditorNodeMap = {
     ...state.nodeMap,
     [splitNodes.updatedStartNode.key]: splitNodes.updatedStartNode,
     ...newFormattedMiddleNodes,

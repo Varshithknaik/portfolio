@@ -1,10 +1,16 @@
-export type Mark =
-  | 'bold'
-  | 'italic'
-  | 'underline'
-  | { type: 'link'; href: string }
-
 export type NodeKey = string
+
+export interface Editor {
+  rootElement: HTMLElement | null
+  editorState: EditorState
+  pendingEditorState: EditorState | null
+}
+
+export interface EditorState {
+  nodes: EditorNodeMap
+  rootNodeKey: NodeKey
+  selection: EditorSelection | null
+}
 
 export interface EditorNodeBase {
   type: string
@@ -16,15 +22,13 @@ export interface ElementNodeBase extends EditorNodeBase {
   children: NodeKey[]
 }
 
-export interface TextNode extends EditorNodeBase {
-  type: 'text'
-  text: string
-  marks: Mark[]
-}
-
 export interface RootNode extends ElementNodeBase {
   type: 'root'
   parent: null
+}
+
+export interface ParagraphNode extends ElementNodeBase {
+  type: 'paragraph'
 }
 
 export interface HeadingNode extends ElementNodeBase {
@@ -32,14 +36,19 @@ export interface HeadingNode extends ElementNodeBase {
   level: 1 | 2 | 3
 }
 
-interface ParagraphNode extends ElementNodeBase {
-  type: 'paragraph'
+export type ElementNode = RootNode | ParagraphNode | HeadingNode
+
+export interface TextNode extends EditorNodeBase {
+  type: 'text'
+  text: string
+  format: number
+  links?: {
+    href: string
+  } | null
 }
 
-export type ElementNode = RootNode | ParagraphNode | HeadingNode
 export type EditorNode = ElementNode | TextNode
-
-export type NodeMap = Record<NodeKey, EditorNode>
+export type EditorNodeMap = Map<NodeKey, EditorNode>
 
 export interface EditorSelection {
   anchorNode: EditorNode | null
@@ -49,13 +58,7 @@ export interface EditorSelection {
   type: 'caret' | 'range'
 }
 
-export interface EditorState {
-  nodeMap: NodeMap
-  rootKey: NodeKey
-  selection: EditorSelection | null
-}
-
-type BlockType = 'paragraph' | 'heading'
+export type BlockType = 'paragraph' | 'heading'
 
 export type Transaction =
   | {
@@ -70,7 +73,7 @@ export type Transaction =
     }
   | {
       type: 'toggleMark'
-      mark: Mark
+      format: number
       origin: 'toolbar' | 'keyboard'
     }
   | {

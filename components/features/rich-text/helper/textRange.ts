@@ -3,7 +3,7 @@ import {
   EditorState,
   ElementNode,
   NodeKey,
-  NodeMap,
+  EditorNodeMap,
   TextNode,
 } from '../type/schema'
 import { isElementNode, isTextNode } from './nodeUtils'
@@ -29,7 +29,7 @@ export type MarkPolicy = 'same-block' | 'sibling-blocks'
 const maxDepth = 32
 const resolveTextNode = (
   key: NodeKey | undefined,
-  nodeMap: NodeMap,
+  nodeMap: EditorNodeMap,
   offset: number
 ): TextPoint | null => {
   if (!key) return null
@@ -53,7 +53,10 @@ const resolveTextNode = (
 }
 
 // Use a depth guard to avoid traversing malformed parent cycles indefinitely.
-const getPathToRoot = (leaf: NodeKey, nodeMap: NodeMap): NodeKey[] | null => {
+const getPathToRoot = (
+  leaf: NodeKey,
+  nodeMap: EditorNodeMap
+): NodeKey[] | null => {
   const path: NodeKey[] = []
   let currentKey: NodeKey | undefined = leaf
   let depth = 0
@@ -70,7 +73,7 @@ const getPathToRoot = (leaf: NodeKey, nodeMap: NodeMap): NodeKey[] | null => {
 }
 
 const resolveCommonElement = (
-  nodeMap: NodeMap,
+  nodeMap: EditorNodeMap,
   anchorNodePath: NodeKey[],
   focusNodePath: NodeKey[]
 ): {
