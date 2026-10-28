@@ -24,8 +24,8 @@ const getTextRange = (state: EditorState): TextRange | null => {
 
   if (!anchorNodeKey || !focusNodeKey) return null
 
-  const anchorNode = nodeMap[anchorNodeKey]
-  const focusNode = nodeMap[focusNodeKey]
+  const anchorNode = nodeMap.get(anchorNodeKey)
+  const focusNode = nodeMap.get(focusNodeKey)
 
   if (!anchorNode || !focusNode) return null
 
@@ -40,7 +40,7 @@ const getTextRange = (state: EditorState): TextRange | null => {
 
   if (!anchorNode.parent || !focusNode.parent) return null
 
-  const parentNode = nodeMap[anchorNode.parent]
+  const parentNode = nodeMap.get(anchorNode.parent)
   if (!parentNode || !isElementNode(parentNode)) return null
 
   const indexOfAnchor = parentNode.children.indexOf(anchorNode.key)
@@ -65,7 +65,7 @@ const getTextRange = (state: EditorState): TextRange | null => {
 
   if (
     affectedKeys.some((key) => {
-      const node = nodeMap[key]
+      const node = nodeMap.get(key)
       return !node || !isTextNode(node)
     })
   ) {

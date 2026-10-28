@@ -33,10 +33,10 @@ const resolveTextNode = (
   offset: number
 ): TextPoint | null => {
   if (!key) return null
-  const node = nodeMap[key]
+  const node = nodeMap.get(key)
   if (!node || !node.parent || !isTextNode(node)) return null
 
-  const parentNode = nodeMap[node.parent]
+  const parentNode = nodeMap.get(node.parent)
   if (!parentNode || !isElementNode(parentNode)) return null
 
   const isValidOffset = offset >= 0 && offset <= node.text.length
@@ -63,7 +63,7 @@ const getPathToRoot = (
 
   while (currentKey && depth++ < maxDepth) {
     path.push(currentKey)
-    const node: EditorNode = nodeMap[currentKey]
+    const node: EditorNode | undefined = nodeMap.get(currentKey)
     if (!node) return null
     if (node.parent === null) return path.reverse()
     currentKey = node.parent
@@ -89,7 +89,7 @@ const resolveCommonElement = (
   }
 
   for (let idx = sharedLength - 1; idx >= 0; idx--) {
-    const node = nodeMap[anchorNodePath[idx]]
+    const node = nodeMap.get(anchorNodePath[idx])
     if (!node || !isElementNode(node)) continue
 
     return {
@@ -201,8 +201,8 @@ export const getReplacementPolicy = (
     range.startPath.length === 2 && range.endPath.length === 2
   if (!isSiblingBlocks) return null
 
-  const startBlock = state.nodeMap[range.startPath[0]]
-  const endBlock = state.nodeMap[range.endPath[0]]
+  const startBlock = state.nodeMap.get(range.startPath[0])
+  const endBlock = state.nodeMap.get(range.endPath[0])
 
   if (
     startBlock &&
@@ -229,8 +229,8 @@ export const getMarkPolicy = (
     range.startPath.length === 2 && range.endPath.length === 2
   if (!isSiblingBlocks) return null
 
-  const startBlock = state.nodeMap[range.startPath[0]]
-  const endBlock = state.nodeMap[range.endPath[0]]
+  const startBlock = state.nodeMap.get(range.startPath[0])
+  const endBlock = state.nodeMap.get(range.endPath[0])
 
   if (
     startBlock &&

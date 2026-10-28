@@ -1,5 +1,4 @@
-import { create } from 'node:domain'
-import { EditorState, NodeKey, EditorNodeMap, TextNode } from '../type/schema'
+import { NodeKey, EditorNodeMap, TextNode } from '../type/schema'
 import { createKey, isElementNode, isTextNode } from './nodeUtils'
 import { TextPoint } from './textRange'
 
@@ -86,8 +85,8 @@ export const splitNodesForMarkRange = (
       text: endSuffix,
     }
   } else if (start.node.parent && start.node.parent === end.node.parent) {
-    const parentNode = nodeMap[start.node.parent]
-    if (!isElementNode(parentNode)) return null
+    const parentNode = nodeMap.get(start.node.parent)
+    if (!parentNode || !isElementNode(parentNode)) return null
 
     const startPrefix = start.node.text.slice(0, start.offset)
     const startSuffix = start.node.text.slice(start.offset)
@@ -116,7 +115,7 @@ export const splitNodesForMarkRange = (
       },
       ...parentNode.children
         .slice(start.index + 1, end.index)
-        .map((key) => nodeMap[key])
+        .map((key) => nodeMap.get(key))
         .filter(isTextNode),
       {
         ...end.node,

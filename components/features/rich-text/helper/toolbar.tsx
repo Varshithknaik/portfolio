@@ -7,16 +7,17 @@ import {
 } from 'react-icons/md'
 import { LuHeading1, LuHeading2 } from 'react-icons/lu'
 import { ElementNode, TextNode } from '../type/schema'
-import { isElementNode, isTextNode } from './nodeUtils'
+import { Format, hasFormat, isElementNode, isTextNode } from './nodeUtils'
 
-export type ToolbarKey =
-  | 'bold'
-  | 'italic'
-  | 'underline'
-  | 'paragraph'
-  | 'h1'
-  | 'h2'
-  | 'h3'
+export type MarkKey = 'bold' | 'italic' | 'underline'
+
+export type ToolbarKey = MarkKey | 'paragraph' | 'h1' | 'h2' | 'h3'
+
+export const MARK_FORMAT_MAP: Record<MarkKey, number> = {
+  bold: Format.BOLD,
+  italic: Format.ITALIC,
+  underline: Format.UNDERLINE,
+}
 
 export type ToolbarButton = {
   key: ToolbarKey
@@ -30,19 +31,19 @@ export const getToolbarButtons = (): ToolbarButton[] => [
     key: 'bold',
     icon: <MdFormatBold />,
     isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && node.marks.includes('bold'),
+      isTextNode(node) && hasFormat(node.format, Format.BOLD),
   },
   {
     key: 'italic',
     icon: <MdFormatItalic />,
     isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && node.marks.includes('italic'),
+      isTextNode(node) && hasFormat(node.format, Format.ITALIC),
   },
   {
     key: 'underline',
     icon: <MdFormatUnderlined />,
     isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && node.marks.includes('underline'),
+      isTextNode(node) && hasFormat(node.format, Format.UNDERLINE),
   },
   // Blocks
   {

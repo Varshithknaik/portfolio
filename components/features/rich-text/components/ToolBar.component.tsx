@@ -1,6 +1,10 @@
 import { Dispatch } from 'react'
 import { EditorState, Transaction } from '../type/schema'
-import { getToolbarButtons, ToolbarKey } from '../helper/toolbar'
+import {
+  getToolbarButtons,
+  MARK_FORMAT_MAP,
+  ToolbarKey,
+} from '../helper/toolbar'
 
 interface IToolBarBtn {
   isSelected: boolean
@@ -44,7 +48,7 @@ export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
     if (key === 'bold' || key === 'italic' || key === 'underline') {
       dispatch({
         type: 'toggleMark',
-        mark: key,
+        format: MARK_FORMAT_MAP[key],
         origin: 'toolbar',
       })
     } else if (key === 'paragraph') {
@@ -69,7 +73,7 @@ export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
         <ToolBarBtn
           key={btn.key}
           isSelected={
-            !!commonNodeKey && btn.isSelected(state.nodeMap[commonNodeKey])
+            !!commonNodeKey && btn.isSelected(state.nodeMap.get(commonNodeKey)!)
           }
           onSelect={() => handleToolbarButtonClick(btn.key)}
         >

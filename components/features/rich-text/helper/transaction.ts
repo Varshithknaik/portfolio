@@ -1,17 +1,19 @@
 import {
   EditorSelection,
   EditorState,
-  Mark,
   NodeKey,
   EditorNodeMap,
   TextNode,
   Transaction,
 } from '../type/schema'
 import {
-  canonicalizeMarks,
+  addFormat,
   createKey,
+  hasFormat,
   isElementNode,
+  isSameFormat,
   isTextNode,
+  toggleFormat,
 } from './nodeUtils'
 import {
   createReplacementBoundaryNodes,
@@ -43,7 +45,7 @@ export function applyTransaction(
       return deleteTextSelection(state)
     }
     case 'toggleMark': {
-      return toggleMark(state, transaction.mark)
+      return toggleMark(state, transaction.format)
     }
 
     default:
@@ -87,7 +89,7 @@ const replaceInSingleParent = (
     end.index + 1
   )
   for (const key of removedKeys) {
-    delete nextNodeMap[key]
+    nextNodeMap.delete(key)
   }
 
   const nextState = {
@@ -107,9 +109,9 @@ const replaceInSiblingBlocks = (
 ) => {
   const { start, startPath, end, commonAncestor, endPath } = range
   const startParentNodeKey: NodeKey = getPointParentKey(range, startPath)
-  const startParentNode = state.nodeMap[startParentNodeKey]
+  const startParentNode = state.nodeMap.get(startParentNodeKey)
   const endParentNodeKey: NodeKey = getPointParentKey(range, endPath)
-  const endParentNode = state.nodeMap[endParentNodeKey]
+  const endParentNode = state.nodeMap.get(endParentNodeKey)
 
   if (
     !startParentNode ||
@@ -174,7 +176,7 @@ const replaceInSiblingBlocks = (
   ])
 
   for (const blockKey of intermediateBlockKeys) {
-    const block = state.nodeMap[blockKey]
+    const block = state.nodeMap.get(blockKey)
 
     if (block && isElementNode(block)) {
       for (const childKey of block.children) {
@@ -184,7 +186,7 @@ const replaceInSiblingBlocks = (
   }
 
   for (const key of removedKeys) {
-    delete nextNodeMap[key]
+    nextNodeMap.delete(key)
   }
 
   const nextState = {
@@ -250,7 +252,7 @@ const resolveBackwardDeletionRange = (
   // If not start.offset is is 0 select the previous child if present
   for (let idx = start.index - 1; idx >= 0; idx--) {
     const prevKey = commonAncestor.children[idx]
-    const prevNode = state.nodeMap[prevKey]
+    const prevNode = state.nodeMap.get(prevKey)
 
     if (!prevNode || !isTextNode(prevNode)) return null
     if (prevNode.text.length === 0) continue
@@ -284,7 +286,7 @@ const deleteTextSelection = (state: EditorState): EditorState | null => {
 const toggleMarkInSameBlock = (
   state: EditorState,
   range: TreeTextRange,
-  mark: Mark
+  format: number
 ): EditorState | null => {
   const { start, end, commonAncestor } = range
   const splitNodes = splitNodesForMarkRange(start, end, state.nodeMap)
@@ -302,36 +304,31 @@ const toggleMarkInSameBlock = (
 
   if (filteredTextNodes.length === 0) return null
 
-  const hasMark = filteredTextNodes.every((node) => node.marks.includes(mark))
+  const allHasFormat = filteredTextNodes.every((node) =>
+    hasFormat(node.format, format)
+  )
 
   const formattedMiddleTextNodes: TextNode[] = filteredTextNodes.map((node) => {
     return {
       ...node,
-      marks: hasMark
-        ? node.marks.filter((m) => m !== mark)
-        : canonicalizeMarks([...node.marks, mark]),
+      format: allHasFormat
+        ? toggleFormat(node.format, format)
+        : addFormat(node.format, format),
     }
   })
 
-  const newFormattedMiddleNodes: EditorNodeMap =
-    formattedMiddleTextNodes.reduce(
-      (acc, node) => ({
-        ...acc,
-        [node.key]: node,
-      }),
-      {}
-    )
+  const nextNodeMap: EditorNodeMap = new Map(state.nodeMap)
 
-  const nextNodeMap: EditorNodeMap = {
-    ...state.nodeMap,
-    [splitNodes.updatedStartNode.key]: splitNodes.updatedStartNode,
-    ...newFormattedMiddleNodes,
-    [splitNodes.updatedEndNode.key]: splitNodes.updatedEndNode,
-    [commonAncestor.key]: {
-      ...commonAncestor,
-      children: nextChildren,
-    },
+  nextNodeMap.set(splitNodes.updatedStartNode.key, splitNodes.updatedStartNode)
+
+  for (const node of formattedMiddleTextNodes) {
+    nextNodeMap.set(node.key, node)
   }
+  nextNodeMap.set(splitNodes.updatedEndNode.key, splitNodes.updatedEndNode)
+  nextNodeMap.set(commonAncestor.key, {
+    ...commonAncestor,
+    children: nextChildren,
+  })
 
   const nextStartNode = formattedMiddleTextNodes[0]
   const nextEndNode =
@@ -357,12 +354,12 @@ const getDescendantTextKeys = (
   state: EditorState,
   parent: NodeKey
 ): NodeKey[] => {
-  const parentNode = state.nodeMap[parent]
+  const parentNode = state.nodeMap.get(parent)
   if (!parentNode || !isElementNode(parentNode)) return []
 
   const textKeys: NodeKey[] = []
   for (const key of parentNode.children) {
-    const childNode = state.nodeMap[key]
+    const childNode = state.nodeMap.get(key)
     if (!childNode) continue
 
     if (isTextNode(childNode)) {
@@ -377,14 +374,14 @@ const getDescendantTextKeys = (
 const toggleMarkInSiblingBlocks = (
   state: EditorState,
   range: TreeTextRange,
-  mark: Mark
+  format: number
 ): EditorState | null => {
   const { start, end, commonAncestor, startPath, endPath } = range
 
   const startParentNodeKey: NodeKey = getPointParentKey(range, startPath)
-  const startParentNode = state.nodeMap[startParentNodeKey]
+  const startParentNode = state.nodeMap.get(startParentNodeKey)
   const endParentNodeKey: NodeKey = getPointParentKey(range, endPath)
-  const endParentNode = state.nodeMap[endParentNodeKey]
+  const endParentNode = state.nodeMap.get(endParentNodeKey)
 
   if (
     !startParentNode ||
@@ -433,19 +430,19 @@ const toggleMarkInSiblingBlocks = (
 
   const descendantTextKeys = getDescendantTextKeys(state, commonAncestor.key)
   const descendantNodes: TextNode[] = descendantTextKeys
-    .map((key) => state.nodeMap[key])
-    .filter((node) => node && isTextNode(node))
+    .map((key) => state.nodeMap.get(key))
+    .filter(isTextNode)
 
   const isAllMarksSame = [
     startSuffixNode,
     ...descendantNodes,
     endPrefixNode,
-  ].every((node) => node.marks.includes(mark))
+  ].every((node) => isSameFormat(node.format, format))
 
   return null
 }
 
-const toggleMark = (state: EditorState, mark: Mark): EditorState | null => {
+const toggleMark = (state: EditorState, format: number): EditorState | null => {
   const crossBlockTextRange = resolveTreeTextRange(state)
   let nextEditorState: EditorState | null = null
   if (!crossBlockTextRange) return null
@@ -457,9 +454,9 @@ const toggleMark = (state: EditorState, mark: Mark): EditorState | null => {
   if (!policy) return null
 
   if (policy === 'same-block') {
-    nextEditorState = toggleMarkInSameBlock(state, range, mark)
+    nextEditorState = toggleMarkInSameBlock(state, range, format)
   } else if (policy === 'sibling-blocks') {
-    nextEditorState = toggleMarkInSiblingBlocks(state, range, mark)
+    nextEditorState = toggleMarkInSiblingBlocks(state, range, format)
   } else {
     return null
   }

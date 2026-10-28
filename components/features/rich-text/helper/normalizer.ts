@@ -7,12 +7,11 @@ import {
   TextNode,
 } from '../type/schema'
 import {
-  canonicalizeMarks,
   createKey,
   isElementNode,
   isRootNode,
+  isSameFormat,
   isTextNode,
-  sameMarks,
 } from './nodeUtils'
 
 type LogicalPoint = {
@@ -89,7 +88,7 @@ export function normalizeTextChildren(
     const normalizedChild: TextNode = {
       ...child,
       parent: parentKey,
-      marks: canonicalizeMarks(child.marks),
+      format: child.format,
     }
 
     nextMap.set(childKey, normalizedChild)
@@ -102,7 +101,7 @@ export function normalizeTextChildren(
       prevKey &&
       previous &&
       isTextNode(previous) &&
-      sameMarks(normalizedChild.marks, previous.marks)
+      isSameFormat(normalizedChild.format, previous.format)
     ) {
       // Merge the two text nodes
       const mergedText: TextNode = {
@@ -110,10 +109,10 @@ export function normalizeTextChildren(
         text: previous.text + normalizedChild.text,
       }
 
-      nextMap[prevKey] = mergedText
+      nextMap.set(prevKey, mergedText)
 
       // Remove the current node
-      delete nextMap[childKey]
+      nextMap.delete(childKey)
     } else {
       normalizedChildren.push(childKey)
     }
@@ -121,67 +120,58 @@ export function normalizeTextChildren(
 
   if (normalizedChildren.length === 0) {
     const textKey = createKey('text')
-    nextMap[textKey] = {
+    nextMap.set(textKey, {
       type: 'text',
       key: textKey,
       parent: parentKey,
       text: '',
-      marks: [],
-    }
+      format: 0,
+    })
     normalizedChildren.push(textKey)
-    nextMap[parentKey] = {
-      ...parent,
-      children: normalizedChildren,
-    }
+    nextMap.set(parentKey, { ...parent, children: normalizedChildren })
     return nextMap
   }
 
-  nextMap[parentKey] = {
-    ...parent,
-    children: normalizedChildren,
-  }
+  nextMap.set(parentKey, { ...parent, children: normalizedChildren })
 
   return nextMap
 }
 
 export function normalizeDocument(state: EditorState): EditorState {
-  const { nodeMap, rootKey } = state
-  const root = nodeMap[rootKey]
-  if (!isRootNode(root)) {
+  const { nodeMap, rootNodeKey } = state
+  const root = nodeMap.get(rootNodeKey)
+  if (!root || !isRootNode(root)) {
     throw new Error('Root node is not an element node')
   }
 
-  let nextMap: EditorNodeMap = { ...nodeMap }
+  let nextMap: EditorNodeMap = new Map(nodeMap)
   const rootChildren = root.children.filter((key) => {
-    return !!nodeMap[key]
+    return nodeMap.has(key)
   })
   // rapair logic
   if (rootChildren.length === 0) {
     const paragraphKey = createKey('paragraph')
-    nextMap[paragraphKey] = {
+    nextMap.set(paragraphKey, {
       type: 'paragraph',
       key: paragraphKey,
-      parent: rootKey,
+      parent: rootNodeKey,
       children: [],
-    }
+    })
     rootChildren.push(paragraphKey)
   }
 
-  nextMap[rootKey] = { ...root, children: rootChildren }
+  nextMap.set(rootNodeKey, { ...root, children: rootChildren })
 
   // normalize the text node
   for (const childKey of rootChildren) {
-    const child = nextMap[childKey]
+    const child = nextMap.get(childKey)
     if (!child) continue
 
     if (child.type === 'root') {
       throw new Error('Root node should not be a child of any node')
     }
 
-    nextMap[childKey] = {
-      ...child,
-      parent: rootKey,
-    }
+    nextMap.set(childKey, { ...child, parent: rootNodeKey })
 
     if (isElementNode(child)) {
       nextMap = normalizeTextChildren(nextMap, childKey)
@@ -197,7 +187,7 @@ function getSurvivingNodeText(
   offset: number
 ) {
   if (!nodeKey) return null
-  const node = nodeMap[nodeKey]
+  const node = nodeMap.get(nodeKey)
   if (!node || !isTextNode(node)) return null
 
   return {
@@ -211,11 +201,11 @@ export function findFallbackTextPoint(
   after: EditorState,
   key: NodeKey
 ): { node: TextNode; offset: number } | null {
-  const oldNode = before.nodeMap[key]
+  const oldNode = before.nodeMap.get(key)
   if (!oldNode || !oldNode.parent) return null
 
-  const oldParent = before.nodeMap[oldNode.parent]
-  const newParent = after.nodeMap[oldNode.parent]
+  const oldParent = before.nodeMap.get(oldNode.parent)
+  const newParent = after.nodeMap.get(oldNode.parent)
 
   if (
     !oldParent ||
@@ -230,7 +220,7 @@ export function findFallbackTextPoint(
   if (oldIndex < 0) return null
 
   for (let idx = oldIndex - 1; idx >= 0; idx--) {
-    const previous = after.nodeMap[oldParent.children[idx]]
+    const previous = after.nodeMap.get(oldParent.children[idx])
     if (previous && isTextNode(previous)) {
       return {
         node: previous,
@@ -239,7 +229,7 @@ export function findFallbackTextPoint(
     }
   }
   for (let idx = oldIndex + 1; idx < oldParent.children.length; idx++) {
-    const next = after.nodeMap[oldParent.children[idx]]
+    const next = after.nodeMap.get(oldParent.children[idx])
     if (next && isTextNode(next)) {
       return {
         node: next,
@@ -249,7 +239,7 @@ export function findFallbackTextPoint(
   }
 
   for (const child of newParent.children) {
-    const node = after.nodeMap[child]
+    const node = after.nodeMap.get(child)
     if (node && isTextNode(node)) {
       return {
         node: node,
@@ -272,7 +262,7 @@ function captureBlockOffset(
   const parentKey = anchorNode.parent
   if (!parentKey) return null
 
-  const parentNode = before.nodeMap[parentKey]
+  const parentNode = before.nodeMap.get(parentKey)
   if (!parentNode || !isElementNode(parentNode)) return null
 
   const index = parentNode.children.indexOf(anchorNode.key)
@@ -280,7 +270,7 @@ function captureBlockOffset(
   let offset = 0
 
   for (let idx = index - 1; idx >= 0; idx--) {
-    const previous = before.nodeMap[parentNode.children[idx]]
+    const previous = before.nodeMap.get(parentNode.children[idx])
     if (previous && isTextNode(previous)) {
       offset += previous.text.length
     }
@@ -296,13 +286,13 @@ function resolveBlockOffset(
   after: EditorState,
   logicalPoint: LogicalPoint
 ): { node: TextNode; offset: number } | null {
-  const blockKey = after.nodeMap[logicalPoint.blockKey]
+  const blockKey = after.nodeMap.get(logicalPoint.blockKey)
   if (!blockKey || !isElementNode(blockKey)) return null
 
   let remainingOffset = logicalPoint.offset
 
   for (let idx = 0; idx < blockKey.children.length; idx++) {
-    const child = after.nodeMap[blockKey.children[idx]]
+    const child = after.nodeMap.get(blockKey.children[idx])
 
     if (child && isTextNode(child)) {
       if (remainingOffset <= child.text.length) {

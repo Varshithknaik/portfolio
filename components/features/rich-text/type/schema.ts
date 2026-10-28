@@ -7,7 +7,7 @@ export interface Editor {
 }
 
 export interface EditorState {
-  nodes: EditorNodeMap
+  nodeMap: EditorNodeMap
   rootNodeKey: NodeKey
   selection: EditorSelection | null
 }

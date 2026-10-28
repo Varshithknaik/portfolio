@@ -1,8 +1,8 @@
 'use client'
 
 import { KeyboardEventHandler, useEffect, useRef, useState } from 'react'
-import { createInitState, isElementNode } from './helper/nodeUtils'
-import { EditorState, Mark, Transaction } from './type/schema'
+import { createInitState, Format, isElementNode } from './helper/nodeUtils'
+import { EditorState, Transaction } from './type/schema'
 import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
 import { useSelection } from './hooks/useSelection'
@@ -24,16 +24,16 @@ export function RichTextEditorStarter() {
     const isModifier = event.metaKey || event.ctrlKey
     const key = event.key.toLowerCase()
 
-    const markMap: Record<string, Mark> = {
-      b: 'bold',
-      i: 'italic',
-      u: 'underline',
+    const markMap: Record<string, number> = {
+      b: Format.BOLD,
+      i: Format.ITALIC,
+      u: Format.UNDERLINE,
     }
 
     if (isModifier && markMap[key]) {
       const transaction: Transaction = {
         type: 'toggleMark',
-        mark: markMap[key],
+        format: markMap[key],
         origin: 'keyboard',
       }
       const nextState = applyTransaction(latestStateRef.current, transaction)
@@ -92,9 +92,9 @@ export function RichTextEditorStarter() {
     setState,
   })
 
-  const root = state.nodeMap[state.rootKey]
+  const root = state.nodeMap.get(state.rootNodeKey)
 
-  if (!isElementNode(root)) {
+  if (!root || !isElementNode(root)) {
     throw new Error('Root is not an element node')
   }
 
@@ -128,7 +128,7 @@ export function RichTextEditorStarter() {
         className="p-3 md:p-4 min-h-[7rem] max-w-none text-black dark:text-white focus:outline-none whitespace-pre-wrap flex-1"
       >
         {root.children.map((childKey) => {
-          const node = state.nodeMap[childKey]
+          const node = state.nodeMap.get(childKey)
           if (!node) throw new Error('Node not found in map')
           return (
             <NodeRenderer key={node.key} state={state} nodeKey={node.key} />
