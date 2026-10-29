@@ -25,7 +25,13 @@ export const NodeRenderer = ({ state, nodeKey }: NodeRendererProps) => {
     return null
   }
   if (isRootNode(node)) {
-    return <>{node.children}</>
+    return (
+      <>
+        {node.children.map((key) => (
+          <NodeRenderer key={key} state={state} nodeKey={key} />
+        ))}
+      </>
+    )
   }
 
   if (isTextNode(node)) {

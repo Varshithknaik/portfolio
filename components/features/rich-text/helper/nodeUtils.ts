@@ -140,7 +140,6 @@ export const isTextNode = (
   return node?.type === 'text'
 }
 
-
 export const hasFormat = (format: number, flag: number) => {
   return (format & flag) !== 0
 }

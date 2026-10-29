@@ -1,7 +1,7 @@
 'use client'
 
 import { KeyboardEventHandler, useEffect, useRef, useState } from 'react'
-import { createInitState, Format, isElementNode } from './helper/nodeUtils'
+import { createInitState, Format, isRootNode } from './helper/nodeUtils'
 import { EditorState, Transaction } from './type/schema'
 import { NodeRenderer } from './components/NodeRenderer'
 import { normalizeDocument } from './helper/normalizer'
@@ -94,7 +94,7 @@ export function RichTextEditorStarter() {
 
   const root = state.nodeMap.get(state.rootNodeKey)
 
-  if (!root || !isElementNode(root)) {
+  if (!root || !isRootNode(root)) {
     throw new Error('Root is not an element node')
   }
 

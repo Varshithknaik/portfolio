@@ -74,15 +74,13 @@ const replaceInSingleParent = (
     nextOffset
   )
 
-  const nextNodeMap = {
-    ...state.nodeMap,
-    [start.node.key]: updatedStartNode,
-    [updatedEndNode.key]: updatedEndNode,
-    [commonAncestor.key]: {
-      ...commonAncestor,
-      children: nextChildren,
-    },
-  }
+  const nextNodeMap = new Map(state.nodeMap)
+  nextNodeMap.set(start.node.key, updatedStartNode)
+  nextNodeMap.set(updatedEndNode.key, updatedEndNode)
+  nextNodeMap.set(commonAncestor.key, {
+    ...commonAncestor,
+    children: nextChildren,
+  })
 
   const removedKeys = commonAncestor.children.slice(
     start.index + 1,
@@ -141,23 +139,22 @@ const replaceInSiblingBlocks = (
     updatedStartNode,
     nextOffset
   )
-  const nextNodeMap = {
-    ...state.nodeMap,
-    [start.node.key]: updatedStartNode,
-    [updatedEndNode.key]: updatedEndNode,
-    [commonAncestor.key]: {
-      ...commonAncestor,
-      children: nextChildren,
-    },
-    [startParentNode.key]: {
-      ...startParentNode,
-      children: [
-        ...startParentNode.children.slice(0, start.index + 1),
-        updatedEndNode.key,
-        ...endParentNode.children.slice(end.index + 1),
-      ],
-    },
-  }
+
+  const nextNodeMap = new Map(state.nodeMap)
+  nextNodeMap.set(start.node.key, updatedStartNode)
+  nextNodeMap.set(updatedEndNode.key, updatedEndNode)
+  nextNodeMap.set(commonAncestor.key, {
+    ...commonAncestor,
+    children: nextChildren,
+  })
+  nextNodeMap.set(startParentNode.key, {
+    ...startParentNode,
+    children: [
+      ...startParentNode.children.slice(0, start.index + 1),
+      updatedEndNode.key,
+      ...endParentNode.children.slice(end.index + 1),
+    ],
+  })
 
   const intermediateBlockKeys = commonAncestor.children.slice(
     startNodeIndex + 1,
