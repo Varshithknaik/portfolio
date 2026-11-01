@@ -1,4 +1,10 @@
-import { EditorNode, EditorSelection, NodeKey } from '../type/schema'
+import {
+  EditorNode,
+  EditorSelection,
+  EditorState,
+  NodeKey,
+} from '../type/schema'
+import { isTextNode } from './nodeUtils'
 
 const leafMap = new Map()
 
@@ -56,10 +62,11 @@ const getLeafOffset = (leaf: HTMLElement, domNode: Node, domOffset: number) => {
 }
 
 export const domToEditorSelection = (
-  editorElement: HTMLDivElement
+  editorElement: HTMLDivElement,
+  state: EditorState
 ): EditorSelection | null => {
   const selection = window.getSelection()
-
+  const { nodeMap } = state
   if (!selection) return null
 
   const isInsidetheEditor =
@@ -90,6 +97,21 @@ export const domToEditorSelection = (
     selection.focusNode!,
     selection.focusOffset
   )
+
+  const editorAnchorNode = nodeMap.get(anchorNodeKey)
+  const editorFocusNode = nodeMap.get(focusNodeKey)
+
+  if (
+    !editorAnchorNode ||
+    !editorFocusNode ||
+    !isTextNode(editorAnchorNode) ||
+    !isTextNode(editorFocusNode) ||
+    anchorOffset > editorAnchorNode.text.length ||
+    focusOffset > editorFocusNode.text.length ||
+    anchorOffset < 0 ||
+    focusOffset < 0
+  )
+    return null
 
   return {
     anchorNode: { key: anchorNodeKey, offset: anchorOffset },
