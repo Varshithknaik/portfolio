@@ -5,6 +5,7 @@ import {
   NodeKey,
   EditorNodeMap,
   TextNode,
+  SelectionPoint,
 } from '../type/schema'
 import { isElementNode, isTextNode } from './nodeUtils'
 
@@ -28,18 +29,17 @@ export type MarkPolicy = 'same-block' | 'sibling-blocks'
 
 const maxDepth = 32
 const resolveTextNode = (
-  key: NodeKey | undefined,
   nodeMap: EditorNodeMap,
-  offset: number
+  point: SelectionPoint | null
 ): TextPoint | null => {
-  if (!key) return null
-  const node = nodeMap.get(key)
+  if (!point) return null
+  const node = nodeMap.get(point.key)
   if (!node || !node.parent || !isTextNode(node)) return null
 
   const parentNode = nodeMap.get(node.parent)
   if (!parentNode || !isElementNode(parentNode)) return null
 
-  const isValidOffset = offset >= 0 && offset <= node.text.length
+  const isValidOffset = point.offset >= 0 && point.offset <= node.text.length
   if (!isValidOffset) return null
 
   const index = parentNode.children.indexOf(node.key)
@@ -47,7 +47,7 @@ const resolveTextNode = (
 
   return {
     node,
-    offset,
+    offset: point.offset,
     index,
   }
 }
@@ -70,6 +70,15 @@ const getPathToRoot = (
   }
 
   return null
+}
+
+export const getPointParentKey = (
+  range: TreeTextRange,
+  path: NodeKey[]
+): NodeKey => {
+  return path.length === 1
+    ? range.commonAncestor.key
+    : path[path.length - 2] || range.commonAncestor.key
 }
 
 const resolveCommonElement = (
@@ -129,16 +138,8 @@ export const resolveTreeTextRange = (
   const { selection, nodeMap } = state
   if (!selection) return null
 
-  const anchor = resolveTextNode(
-    selection.anchorNode?.key,
-    nodeMap,
-    selection.anchorOffset
-  )
-  const focus = resolveTextNode(
-    selection.focusNode?.key,
-    nodeMap,
-    selection.focusOffset
-  )
+  const anchor = resolveTextNode(nodeMap, selection.anchorNode)
+  const focus = resolveTextNode(nodeMap, selection.focusNode)
 
   if (!anchor || !focus) return null
 
@@ -168,15 +169,6 @@ export const resolveTreeTextRange = (
     endPath: isAnchorFirst ? common.endPath : common.startPath,
     backward: !isAnchorFirst,
   }
-}
-
-export const getPointParentKey = (
-  range: TreeTextRange,
-  path: NodeKey[]
-): NodeKey => {
-  return path.length === 1
-    ? range.commonAncestor.key
-    : path[path.length - 2] || range.commonAncestor.key
 }
 
 const haveCompatibleBlockKinds = (a: ElementNode, b: ElementNode): boolean => {
@@ -229,18 +221,30 @@ export const getMarkPolicy = (
     range.startPath.length === 2 && range.endPath.length === 2
   if (!isSiblingBlocks) return null
 
-  const startBlock = state.nodeMap.get(range.startPath[0])
-  const endBlock = state.nodeMap.get(range.endPath[0])
+  const startParentNodeKey: NodeKey = getPointParentKey(range, range.startPath)
+  const endParentNodeKey: NodeKey = getPointParentKey(range, range.endPath)
 
-  if (
-    startBlock &&
-    endBlock &&
-    isElementNode(startBlock) &&
-    isElementNode(endBlock) &&
-    haveCompatibleBlockKinds(startBlock, endBlock)
-  ) {
-    return 'sibling-blocks'
-  }
+  const startBlockIndex =
+    range.commonAncestor.children.indexOf(startParentNodeKey)
+  const endBlockIndex = range.commonAncestor.children.indexOf(endParentNodeKey)
+
+  const blockKeys = range.commonAncestor.children.slice(
+    startBlockIndex,
+    endBlockIndex + 1
+  )
+
+  const startParentNode = state.nodeMap.get(startParentNodeKey)
+  if (!startParentNode || !isElementNode(startParentNode)) return null
+
+  const blocks = blockKeys
+    .map((key) => state.nodeMap.get(key))
+    .filter(isElementNode)
+
+  const allBlocksCompatible = blocks.every((block) =>
+    haveCompatibleBlockKinds(startParentNode, block)
+  )
+
+  if (allBlocksCompatible) return 'sibling-blocks'
 
   return null
 }

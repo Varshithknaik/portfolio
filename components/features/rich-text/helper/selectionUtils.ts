@@ -1,4 +1,4 @@
-import { EditorNode, EditorSelection, EditorState } from '../type/schema'
+import { EditorNode, EditorSelection, NodeKey } from '../type/schema'
 
 const leafMap = new Map()
 
@@ -56,8 +56,7 @@ const getLeafOffset = (leaf: HTMLElement, domNode: Node, domOffset: number) => {
 }
 
 export const domToEditorSelection = (
-  editorElement: HTMLDivElement,
-  state: EditorState
+  editorElement: HTMLDivElement
 ): EditorSelection | null => {
   const selection = window.getSelection()
 
@@ -74,8 +73,9 @@ export const domToEditorSelection = (
 
   if (!nearestAnchoreNode || !nearestFocusNode) return null
 
-  const anchorNodeKey = nearestAnchoreNode.dataset.editorLeaf
-  const focusNodeKey = nearestFocusNode.dataset.editorLeaf
+  const anchorNodeKey: NodeKey | undefined =
+    nearestAnchoreNode.dataset.editorLeaf
+  const focusNodeKey: NodeKey | undefined = nearestFocusNode.dataset.editorLeaf
 
   if (!anchorNodeKey || !focusNodeKey) return null
 
@@ -92,24 +92,26 @@ export const domToEditorSelection = (
   )
 
   return {
-    anchorNode: anchorNodeKey
-      ? (state.nodeMap.get(anchorNodeKey) ?? null)
-      : null,
-    anchorOffset: anchorOffset,
-    focusNode: focusNodeKey ? (state.nodeMap.get(focusNodeKey) ?? null) : null,
-    focusOffset: focusOffset,
+    anchorNode: { key: anchorNodeKey, offset: anchorOffset },
+    focusNode: { key: focusNodeKey, offset: focusOffset },
     type: (selection.type.toLowerCase() as 'caret' | 'range') ?? 'caret',
   }
 }
 
 export const editorSelectionToDom = (
   editorElement: HTMLElement,
-  selection: EditorSelection | null
+  selection: EditorSelection | null,
+  nodeMap: Map<NodeKey, EditorNode>
 ) => {
-  if (!selection) return
+  if (!selection || !selection.anchorNode || !selection.focusNode) return
 
-  const anchorNode = findDomTextNode(editorElement, selection.anchorNode)
-  const focusNode = findDomTextNode(editorElement, selection.focusNode)
+  const rawAnchorNode = nodeMap.get(selection.anchorNode.key)
+  const rawFocusNode = nodeMap.get(selection.focusNode.key)
+
+  if (!rawAnchorNode || !rawFocusNode) return
+
+  const anchorNode = findDomTextNode(editorElement, rawAnchorNode)
+  const focusNode = findDomTextNode(editorElement, rawFocusNode)
 
   if (!anchorNode || !focusNode) return
 
@@ -119,11 +121,11 @@ export const editorSelectionToDom = (
 
   const anchorOffset = Math.max(
     0,
-    Math.min(selection.anchorOffset, anchorNode.textContent?.length)
+    Math.min(selection.anchorNode?.offset ?? 0, anchorNode.textContent?.length)
   )
   const focusOffset = Math.max(
     0,
-    Math.min(selection.focusOffset, focusNode.textContent?.length)
+    Math.min(selection.focusNode?.offset ?? 0, focusNode.textContent?.length)
   )
 
   domSelection.setBaseAndExtent(
@@ -143,8 +145,8 @@ export const sameEditorSelection = (
   }
   if (a?.type !== b?.type) return false
   if (a?.anchorNode?.key !== b?.anchorNode?.key) return false
-  if (a?.anchorOffset !== b?.anchorOffset) return false
+  if (a?.anchorNode?.offset !== b?.anchorNode?.offset) return false
   if (a?.focusNode?.key !== b?.focusNode?.key) return false
-  if (a?.focusOffset !== b?.focusOffset) return false
+  if (a?.focusNode?.offset !== b?.focusNode?.offset) return false
   return true
 }

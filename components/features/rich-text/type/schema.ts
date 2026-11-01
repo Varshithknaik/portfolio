@@ -50,12 +50,12 @@ export interface TextNode extends EditorNodeBase {
 export type EditorNode = ElementNode | TextNode
 export type EditorNodeMap = Map<NodeKey, EditorNode>
 
+export type SelectionPoint = { key: NodeKey; offset: number }
 export interface EditorSelection {
-  anchorNode: EditorNode | null
-  anchorOffset: number
-  focusNode: EditorNode | null
-  focusOffset: number
+  anchorNode: SelectionPoint | null
+  focusNode: SelectionPoint | null
   type: 'caret' | 'range'
+  storedFormat?: number | null
 }
 
 export type BlockType = 'paragraph' | 'heading'

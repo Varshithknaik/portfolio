@@ -100,6 +100,8 @@ export function RichTextEditorStarter() {
 
   const handleToolbar = (transaction: Transaction) => {
     const newState = applyTransaction(latestStateRef.current, transaction)
+
+    console.log(newState, 'null')
     if (!newState) return
     setState(newState)
   }

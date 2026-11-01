@@ -332,10 +332,14 @@ const toggleMarkInSameBlock = (
     formattedMiddleTextNodes[formattedMiddleTextNodes.length - 1]
 
   const nextSelection: EditorSelection = createRangeSelection({
-    anchorNode: nextStartNode,
-    anchorOffset: 0,
-    focusNode: nextEndNode,
-    focusOffset: nextEndNode.text.length,
+    anchorNode: {
+      key: nextStartNode.key,
+      offset: 0,
+    },
+    focusNode: {
+      key: nextEndNode.key,
+      offset: nextEndNode.text.length,
+    },
   })
 
   const nextState = {
@@ -393,7 +397,6 @@ const toggleMarkInSiblingBlocks = (
 
   const endPrefix = end.node.text.slice(0, end.offset)
   const endSuffix = end.node.text.slice(end.offset)
-  // start's cursors to end make new mark with its existing mark and make it as the new children + inbettween elemets + end
   const startPrefixNode: TextNode = {
     ...start.node,
     text: startPrefix,
@@ -407,6 +410,11 @@ const toggleMarkInSiblingBlocks = (
     text: startSuffix,
   }
 
+  const startSuffixChildren = startParentNode.children
+    .slice(start.index + 1)
+    .map((key) => state.nodeMap.get(key))
+    .filter(isTextNode)
+
   const endPrefixKey = createKey('t')
   const endPrefixNode: TextNode = {
     ...end.node,
@@ -418,25 +426,100 @@ const toggleMarkInSiblingBlocks = (
     text: endSuffix,
   }
 
+  const endPrefixChildrens = endParentNode.children
+    .slice(0, end.index)
+    .map((key) => state.nodeMap.get(key))
+    .filter(isTextNode)
+
+  const startBlockIndex = commonAncestor.children.indexOf(startParentNodeKey)
+  const endBlockIndex = commonAncestor.children.indexOf(endParentNodeKey)
+
+  if (startBlockIndex < 0 || endBlockIndex <= startBlockIndex) {
+    return null
+  }
+
   const inBetweenElements = commonAncestor.children.slice(
-    start.index + 1,
-    end.index + 1
+    startBlockIndex + 1,
+    endBlockIndex
   )
 
-  console.log(inBetweenElements)
+  const descendantTextKeys: NodeKey[] = []
 
-  const descendantTextKeys = getDescendantTextKeys(state, commonAncestor.key)
+  inBetweenElements.forEach((elementKey) => {
+    descendantTextKeys.push(...getDescendantTextKeys(state, elementKey))
+  })
+
   const descendantNodes: TextNode[] = descendantTextKeys
     .map((key) => state.nodeMap.get(key))
     .filter(isTextNode)
 
-  const isAllMarksSame = [
+  const selectedNodes: TextNode[] = [
     startSuffixNode,
+    ...startSuffixChildren,
     ...descendantNodes,
+    ...endPrefixChildrens,
     endPrefixNode,
-  ].every((node) => isSameFormat(node.format, format))
+  ].filter((node) => node.text.length > 0)
 
-  return null
+  if (selectedNodes.length === 0) return null
+
+  const allHasFormat = selectedNodes.every((node) =>
+    hasFormat(node.format, format)
+  )
+
+  const formattedTextNodes: TextNode[] = selectedNodes.map((node) => ({
+    ...node,
+    format: allHasFormat
+      ? toggleFormat(node.format, format)
+      : addFormat(node.format, format),
+  }))
+
+  const nextNodeMap = new Map(state.nodeMap)
+  for (const node of formattedTextNodes) {
+    nextNodeMap.set(node.key, node)
+  }
+
+  nextNodeMap.set(startPrefixNode.key, startPrefixNode)
+  nextNodeMap.set(endSuffixNode.key, endSuffixNode)
+
+  //update the childrens
+  nextNodeMap.set(startParentNodeKey, {
+    ...startParentNode,
+    children: [
+      ...startParentNode.children.slice(0, start.index + 1),
+      startSuffixNode.key,
+      ...startSuffixChildren.map((node) => node.key),
+    ],
+  })
+
+  nextNodeMap.set(endParentNodeKey, {
+    ...endParentNode,
+    children: [
+      ...endPrefixChildrens.map((node) => node.key),
+      endPrefixNode.key,
+      endSuffixNode.key,
+      ...endParentNode.children.slice(end.index + 1),
+    ],
+  })
+
+  const nextSelection: EditorSelection = createRangeSelection({
+    anchorNode: {
+      key: startSuffixNode.key,
+      offset: 0,
+    },
+    focusNode: {
+      key: endPrefixNode.key,
+      offset: endPrefixNode.text.length,
+    },
+  })
+
+  const nextState = {
+    ...state,
+    nodeMap: nextNodeMap,
+    selection: nextSelection,
+  }
+
+  return nextState
 }
 
 const toggleMark = (state: EditorState, format: number): EditorState | null => {
@@ -457,6 +540,8 @@ const toggleMark = (state: EditorState, format: number): EditorState | null => {
   } else {
     return null
   }
+
+  console.log(nextEditorState)
 
   if (!nextEditorState) return null
 

@@ -126,8 +126,10 @@ export const createInitState = (): EditorState => {
   }
 }
 
-export const isElementNode = (node: EditorNode): node is ElementNode => {
-  return 'children' in node
+export const isElementNode = (
+  node: EditorNode | undefined | null
+): node is ElementNode => {
+  return node !== null && node !== undefined && 'children' in node
 }
 
 export const isRootNode = (node: EditorNode): node is RootNode => {

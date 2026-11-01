@@ -5,6 +5,7 @@ import {
   NodeKey,
   EditorNodeMap,
   TextNode,
+  SelectionPoint,
 } from '../type/schema'
 import {
   createKey,
@@ -24,25 +25,19 @@ export const createCaretSelection = (
   offset: number
 ): EditorSelection => {
   return {
-    anchorNode: node,
-    anchorOffset: offset,
-    focusNode: node,
-    focusOffset: offset,
+    anchorNode: { key: node.key, offset },
+    focusNode: { key: node.key, offset },
     type: 'caret',
   }
 }
 
 export const createRangeSelection = ({
   anchorNode,
-  anchorOffset,
   focusNode,
-  focusOffset,
 }: Omit<EditorSelection, 'type'>): EditorSelection => {
   return {
     anchorNode,
-    anchorOffset,
     focusNode,
-    focusOffset,
     type: 'range',
   }
 }
@@ -167,7 +162,7 @@ export function normalizeDocument(state: EditorState): EditorState {
     const child = nextMap.get(childKey)
     if (!child) continue
 
-    if (child.type === 'root') {
+    if (isRootNode(child)) {
       throw new Error('Root node should not be a child of any node')
     }
 
@@ -183,16 +178,15 @@ export function normalizeDocument(state: EditorState): EditorState {
 
 function getSurvivingNodeText(
   nodeMap: EditorNodeMap,
-  nodeKey: NodeKey | undefined,
-  offset: number
-) {
-  if (!nodeKey) return null
-  const node = nodeMap.get(nodeKey)
+  point: SelectionPoint | null
+): SelectionPoint | null {
+  if (!point) return null
+  const node = nodeMap.get(point.key)
   if (!node || !isTextNode(node)) return null
 
   return {
-    node,
-    offset: Math.min(offset, node.text.length),
+    key: node.key,
+    offset: Math.min(point.offset, node.text.length),
   }
 }
 
@@ -252,20 +246,22 @@ export function findFallbackTextPoint(
 
 function captureBlockOffset(
   before: EditorState,
-  anchorNode: EditorNode | null,
-  anchorOffset: number
+  point: SelectionPoint | null
 ): LogicalPoint | null {
-  if (!anchorNode || !isTextNode(anchorNode)) {
+  if (!point) return null
+
+  const node = before.nodeMap.get(point?.key)
+  if (!node || !isTextNode(node)) {
     return null
   }
 
-  const parentKey = anchorNode.parent
+  const parentKey = node.parent
   if (!parentKey) return null
 
   const parentNode = before.nodeMap.get(parentKey)
   if (!parentNode || !isElementNode(parentNode)) return null
 
-  const index = parentNode.children.indexOf(anchorNode.key)
+  const index = parentNode.children.indexOf(node.key)
 
   let offset = 0
 
@@ -278,14 +274,14 @@ function captureBlockOffset(
 
   return {
     blockKey: parentKey,
-    offset: offset + anchorOffset,
+    offset: offset + point.offset,
   }
 }
 
 function resolveBlockOffset(
   after: EditorState,
   logicalPoint: LogicalPoint
-): { node: TextNode; offset: number } | null {
+): SelectionPoint | null {
   const blockKey = after.nodeMap.get(logicalPoint.blockKey)
   if (!blockKey || !isElementNode(blockKey)) return null
 
@@ -296,7 +292,7 @@ function resolveBlockOffset(
 
     if (child && isTextNode(child)) {
       if (remainingOffset <= child.text.length) {
-        return { node: child, offset: remainingOffset }
+        return { key: child.key, offset: remainingOffset }
       }
       remainingOffset -= child.text.length
     }
@@ -313,44 +309,22 @@ export function remapSelectionAfterNormalization(
   if (!selection) return after
 
   //check if anchorNode Survived
-  const anchor = getSurvivingNodeText(
-    after.nodeMap,
-    selection.anchorNode?.key,
-    selection.anchorOffset
-  )
-
-  const focus = getSurvivingNodeText(
-    after.nodeMap,
-    selection.focusNode?.key,
-    selection.focusOffset
-  )
-
-  console.log(anchor, focus, 'anchor and focus', before, after)
+  const anchor = getSurvivingNodeText(after.nodeMap, selection.anchorNode)
+  const focus = getSurvivingNodeText(after.nodeMap, selection.focusNode)
 
   if (anchor && focus) {
     return {
       ...after,
       selection: {
         type: selection.type,
-        anchorNode: anchor.node,
-        focusNode: focus.node,
-        anchorOffset: anchor.offset,
-        focusOffset: focus.offset,
+        anchorNode: anchor,
+        focusNode: focus,
       },
     }
   }
 
-  const logicalAnchor = captureBlockOffset(
-    before,
-    selection.anchorNode,
-    selection.anchorOffset
-  )
-
-  const logicalFocus = captureBlockOffset(
-    before,
-    selection.focusNode,
-    selection.focusOffset
-  )
+  const logicalAnchor = captureBlockOffset(before, selection.anchorNode)
+  const logicalFocus = captureBlockOffset(before, selection.focusNode)
 
   if (logicalAnchor && logicalFocus) {
     const remapAnchor = resolveBlockOffset(after, logicalAnchor)
@@ -361,10 +335,8 @@ export function remapSelectionAfterNormalization(
         ...after,
         selection: {
           type: selection.type,
-          anchorNode: remapAnchor.node,
-          focusNode: remapFocus.node,
-          anchorOffset: remapAnchor.offset,
-          focusOffset: remapFocus.offset,
+          anchorNode: remapAnchor,
+          focusNode: remapFocus,
         },
       }
     }
@@ -377,10 +349,8 @@ export function remapSelectionAfterNormalization(
       ...after,
       selection: {
         type: 'caret',
-        anchorNode: survivingNode.node,
-        focusNode: survivingNode.node,
-        anchorOffset: survivingNode.offset,
-        focusOffset: survivingNode.offset,
+        anchorNode: survivingNode,
+        focusNode: survivingNode,
       },
     }
   }

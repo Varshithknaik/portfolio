@@ -34,7 +34,7 @@ export const useSelection = ({
     if (!editor) return
 
     const handleSelection = () => {
-      const nextSelection = domToEditorSelection(editor, editorState.current)
+      const nextSelection = domToEditorSelection(editor)
 
       if (!nextSelection) return
 
@@ -55,6 +55,10 @@ export const useSelection = ({
     const editor = editorElement?.current
     if (!editor) return
 
-    editorSelectionToDom(editor, editorState.current.selection)
+    editorSelectionToDom(
+      editor,
+      editorState.current.selection,
+      editorState.current.nodeMap
+    )
   }, [editorElement, state.selection])
 }
