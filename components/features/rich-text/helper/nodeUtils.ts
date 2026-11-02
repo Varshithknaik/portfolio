@@ -126,6 +126,14 @@ export const createInitState = (): EditorState => {
   }
 }
 
+export const serializeEditorState = (state: EditorState) => {
+  return JSON.stringify({
+    rootNodeKey: state.rootNodeKey,
+    nodes: Array.from(state.nodeMap.entries()),
+    selection: state.selection,
+  })
+}
+
 export const isElementNode = (
   node: EditorNode | undefined | null
 ): node is ElementNode => {
