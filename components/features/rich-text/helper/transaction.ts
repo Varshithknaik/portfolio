@@ -327,6 +327,15 @@ const toggleMarkInSameBlock = (
     children: nextChildren,
   })
 
+  const removedKeys = commonAncestor.children.slice(
+    start.index + 1,
+    end.index + 1
+  )
+
+  for (const key of removedKeys) {
+    nextNodeMap.delete(key)
+  }
+
   const nextStartNode = formattedMiddleTextNodes[0]
   const nextEndNode =
     formattedMiddleTextNodes[formattedMiddleTextNodes.length - 1]
