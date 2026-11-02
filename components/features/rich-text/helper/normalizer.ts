@@ -12,6 +12,7 @@ import {
   isElementNode,
   isRootNode,
   isSameFormat,
+  isSameLink,
   isTextNode,
 } from './nodeUtils'
 
@@ -96,7 +97,8 @@ export function normalizeTextChildren(
       prevKey &&
       previous &&
       isTextNode(previous) &&
-      isSameFormat(normalizedChild.format, previous.format)
+      isSameFormat(normalizedChild.format, previous.format) &&
+      isSameLink(normalizedChild.link, previous.link)
     ) {
       // Merge the two text nodes
       const mergedText: TextNode = {

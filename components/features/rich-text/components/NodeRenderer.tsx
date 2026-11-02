@@ -50,8 +50,8 @@ export const NodeRenderer = ({ state, nodeKey }: NodeRendererProps) => {
       element = <u>{element}</u>
     }
     // Links are now separate properties on TextNode
-    if (node.links?.href) {
-      element = <a href={node.links.href}>{element}</a>
+    if (node.link?.href) {
+      element = <a href={node.link.href}>{element}</a>
     }
     return element
   }

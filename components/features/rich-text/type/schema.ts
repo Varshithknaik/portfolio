@@ -42,7 +42,7 @@ export interface TextNode extends EditorNodeBase {
   type: 'text'
   text: string
   format: number
-  links?: {
+  link?: {
     href: string
   } | null
 }

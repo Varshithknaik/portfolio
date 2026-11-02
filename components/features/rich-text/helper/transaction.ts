@@ -502,6 +502,10 @@ const toggleMarkInSiblingBlocks = (
     ],
   })
 
+  // Delete the split start and end nodes
+  nextNodeMap.delete(start.node.key)
+  nextNodeMap.delete(end.node.key)
+
   const nextSelection: EditorSelection = createRangeSelection({
     anchorNode: {
       key: startSuffixNode.key,
@@ -540,8 +544,6 @@ const toggleMark = (state: EditorState, format: number): EditorState | null => {
   } else {
     return null
   }
-
-  console.log(nextEditorState)
 
   if (!nextEditorState) return null
 

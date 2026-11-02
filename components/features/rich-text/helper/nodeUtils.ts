@@ -170,4 +170,8 @@ export function isSameFormat(a: number, b: number): boolean {
   return a === b
 }
 
+export function isSameLink(a: TextNode['link'], b: TextNode['link']): boolean {
+  return (a?.href ?? null) === (b?.href ?? null)
+}
+
 export const createKey = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
