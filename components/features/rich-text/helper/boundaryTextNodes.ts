@@ -17,6 +17,7 @@ export type SplitNodes = {
   updatedStartNode: TextNode
   updatedMiddleNodes: TextNode[]
   updatedEndNode: TextNode
+  removedKeys: NodeKey[]
 }
 
 export const createReplacementBoundaryNodes = (
@@ -58,6 +59,7 @@ export const splitNodesForMarkRange = (
   let updatedStartNode: TextNode
   let updatedMiddleNodes: TextNode[]
   let updatedEndNode: TextNode
+  const removedKeys: NodeKey[] = []
 
   if (start.node.key === end.node.key) {
     const startPrefix = start.node.text.slice(0, start.offset)
@@ -124,6 +126,8 @@ export const splitNodesForMarkRange = (
         text: endPrefix,
       },
     ]
+
+    if (start.node.key != end.node.key) removedKeys.push(end.node.key)
   } else {
     return null
   }
@@ -132,5 +136,6 @@ export const splitNodesForMarkRange = (
     updatedStartNode,
     updatedMiddleNodes,
     updatedEndNode,
+    removedKeys,
   }
 }
