@@ -11,7 +11,6 @@ import {
   createKey,
   hasFormat,
   isElementNode,
-  isSameFormat,
   isTextNode,
   toggleFormat,
 } from './nodeUtils'
@@ -505,10 +504,6 @@ const toggleMarkInSiblingBlocks = (
       ...endParentNode.children.slice(end.index + 1),
     ],
   })
-
-  // Delete the split start and end nodes
-  nextNodeMap.delete(start.node.key)
-  nextNodeMap.delete(end.node.key)
 
   const nextSelection: EditorSelection = createRangeSelection({
     anchorNode: {
