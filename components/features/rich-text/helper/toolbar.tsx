@@ -38,6 +38,14 @@ const isMarkSelected = (state: EditorState, format: number): boolean => {
     if (selection.storedFormat != null) {
       return hasFormat(selection.storedFormat, format)
     }
+
+    const anchorNodeKey = selection.anchorNode?.key
+    if (!anchorNodeKey) return false
+
+    const node = state.nodeMap.get(anchorNodeKey)
+    if (!node || !isTextNode(node)) return false
+
+    return hasFormat(node.format, format)
   }
 
   return false
