@@ -224,24 +224,51 @@ export const getMarkPolicy = (
   const startParentNodeKey: NodeKey = getPointParentKey(range, range.startPath)
   const endParentNodeKey: NodeKey = getPointParentKey(range, range.endPath)
 
+  if (startParentNodeKey === endParentNodeKey) return null
+
+  const startBlock = state.nodeMap.get(startParentNodeKey)
+  const endBlock = state.nodeMap.get(endParentNodeKey)
+
+  if (
+    !startBlock ||
+    !endBlock ||
+    !isElementNode(startBlock) ||
+    !isElementNode(endBlock)
+  ) {
+    return null
+  }
+
+  if (
+    startBlock.parent !== range.commonAncestor.key ||
+    endBlock.parent !== range.commonAncestor.key
+  )
+    return null
+
   const startBlockIndex =
     range.commonAncestor.children.indexOf(startParentNodeKey)
   const endBlockIndex = range.commonAncestor.children.indexOf(endParentNodeKey)
+
+  if (
+    startBlockIndex < 0 ||
+    endBlockIndex < 0 ||
+    range.commonAncestor.children[startBlockIndex] !== startParentNodeKey ||
+    range.commonAncestor.children[endBlockIndex] !== endParentNodeKey ||
+    startBlockIndex >= endBlockIndex
+  ) {
+    return null
+  }
 
   const blockKeys = range.commonAncestor.children.slice(
     startBlockIndex,
     endBlockIndex + 1
   )
 
-  const startParentNode = state.nodeMap.get(startParentNodeKey)
-  if (!startParentNode || !isElementNode(startParentNode)) return null
-
   const blocks = blockKeys
     .map((key) => state.nodeMap.get(key))
     .filter(isElementNode)
 
   const allBlocksCompatible = blocks.every((block) =>
-    haveCompatibleBlockKinds(startParentNode, block)
+    haveCompatibleBlockKinds(startBlock, block)
   )
 
   if (allBlocksCompatible) return 'sibling-blocks'

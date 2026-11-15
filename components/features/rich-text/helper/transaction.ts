@@ -334,15 +334,19 @@ const toggleMarkInSameBlock = (
   const nextEndNode =
     formattedMiddleTextNodes[formattedMiddleTextNodes.length - 1]
 
+  const startNode = {
+    key: nextStartNode.key,
+    offset: 0,
+  }
+
+  const endNode = {
+    key: nextEndNode.key,
+    offset: nextEndNode.text.length,
+  }
+
   const nextSelection: EditorSelection = createRangeSelection({
-    anchorNode: {
-      key: nextStartNode.key,
-      offset: 0,
-    },
-    focusNode: {
-      key: nextEndNode.key,
-      offset: nextEndNode.text.length,
-    },
+    anchorNode: range.backward ? endNode : startNode,
+    focusNode: range.backward ? startNode : endNode,
   })
 
   const nextState = {
@@ -505,15 +509,19 @@ const toggleMarkInSiblingBlocks = (
     ],
   })
 
+  const startNode = {
+    key: startSuffixNode.key,
+    offset: 0,
+  }
+
+  const endNode = {
+    key: endPrefixNode.key,
+    offset: endPrefixNode.text.length,
+  }
+
   const nextSelection: EditorSelection = createRangeSelection({
-    anchorNode: {
-      key: startSuffixNode.key,
-      offset: 0,
-    },
-    focusNode: {
-      key: endPrefixNode.key,
-      offset: endPrefixNode.text.length,
-    },
+    anchorNode: range.backward ? endNode : startNode,
+    focusNode: range.backward ? startNode : endNode,
   })
 
   const nextState = {
