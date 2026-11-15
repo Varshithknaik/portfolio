@@ -40,7 +40,7 @@ export const useSelection = ({
 
       setState((prev) => {
         if (sameEditorSelection(prev.selection, nextSelection)) return prev
-        return { ...prev, selection: nextSelection }
+        return { ...prev, selection: { ...nextSelection, storedFormat: null } }
       })
     }
 

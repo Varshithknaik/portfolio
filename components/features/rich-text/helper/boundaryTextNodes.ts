@@ -10,6 +10,7 @@ export type BoundaryTextPoint = {
 export type BoundaryTextNodes = {
   updatedStartNode: TextNode
   updatedEndNode: TextNode
+  newMiddleNode: TextNode | null
   nextOffset: number
 }
 
@@ -20,18 +21,42 @@ export type SplitNodes = {
   removedKeys: NodeKey[]
 }
 
-export const createReplacementBoundaryNodes = (
-  start: BoundaryTextPoint,
-  end: BoundaryTextPoint,
-  replacementText: string,
+type ReplacementBoundaryNodesInput = {
+  start: BoundaryTextPoint
+  end: BoundaryTextPoint
+  replacementText: string
   endParentKey?: NodeKey
-): BoundaryTextNodes => {
+  storedFormat?: number | null
+}
+
+export const createReplacementBoundaryNodes = ({
+  start,
+  end,
+  replacementText,
+  endParentKey,
+  storedFormat,
+}: ReplacementBoundaryNodesInput): BoundaryTextNodes => {
   const startPrefix = start.node.text.slice(0, start.offset)
   const endSuffix = end.node.text.slice(end.offset)
 
+  const hasStoredFormat = storedFormat != null
+
   const updatedStartNode: TextNode = {
     ...start.node,
-    text: startPrefix + replacementText,
+    text: startPrefix + (hasStoredFormat ? '' : replacementText),
+  }
+
+  let newMiddleNode: TextNode | null = null
+
+  if (hasStoredFormat) {
+    const newMiddleNodeKey = createKey('t')
+    newMiddleNode = {
+      ...start.node,
+      format: storedFormat,
+      key: newMiddleNodeKey,
+      parent: endParentKey ?? end.node.parent,
+      text: replacementText,
+    }
   }
 
   const newEndNodeKey = createKey('t')
@@ -45,7 +70,10 @@ export const createReplacementBoundaryNodes = (
   return {
     updatedStartNode,
     updatedEndNode,
-    nextOffset: startPrefix.length + replacementText.length,
+    newMiddleNode,
+    nextOffset: hasStoredFormat
+      ? replacementText.length
+      : startPrefix.length + replacementText.length,
   }
 }
 

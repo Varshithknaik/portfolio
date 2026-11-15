@@ -36,14 +36,6 @@ interface ITextEditorToolBar {
 const buttons = getToolbarButtons()
 
 export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
-  const selection = state.selection
-
-  const anchorNodeKey = selection?.anchorNode?.key
-  const offsetNodeKey = selection?.focusNode?.key
-
-  const isSameNode = !!(anchorNodeKey && anchorNodeKey === offsetNodeKey)
-  const commonNodeKey = isSameNode ? anchorNodeKey : null
-
   const handleToolbarButtonClick = (key: ToolbarKey) => {
     if (key === 'bold' || key === 'italic' || key === 'underline') {
       dispatch({
@@ -72,9 +64,7 @@ export function ToolBar({ state, dispatch }: ITextEditorToolBar) {
       {buttons.map((btn) => (
         <ToolBarBtn
           key={btn.key}
-          isSelected={
-            !!commonNodeKey && btn.isSelected(state.nodeMap.get(commonNodeKey)!)
-          }
+          isSelected={btn.isSelected(state)}
           onSelect={() => handleToolbarButtonClick(btn.key)}
         >
           {btn.icon}

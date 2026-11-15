@@ -30,6 +30,10 @@ export function RichTextEditorStarter() {
       u: Format.UNDERLINE,
     }
 
+    if (isModifier && ['z', 'k', 'd', 'x', 'v'].includes(key)) {
+      event.preventDefault()
+    }
+
     if (isModifier && markMap[key]) {
       const transaction: Transaction = {
         type: 'toggleMark',

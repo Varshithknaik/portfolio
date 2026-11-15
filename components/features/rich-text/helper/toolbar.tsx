@@ -6,7 +6,12 @@ import {
   MdFormatUnderlined,
 } from 'react-icons/md'
 import { LuHeading1, LuHeading2 } from 'react-icons/lu'
-import { ElementNode, TextNode } from '../type/schema'
+import {
+  EditorSelection,
+  EditorState,
+  ElementNode,
+  TextNode,
+} from '../type/schema'
 import { Format, hasFormat, isElementNode, isTextNode } from './nodeUtils'
 
 export type MarkKey = 'bold' | 'italic' | 'underline'
@@ -22,7 +27,20 @@ export const MARK_FORMAT_MAP: Record<MarkKey, number> = {
 export type ToolbarButton = {
   key: ToolbarKey
   icon: ReactNode
-  isSelected: (node: TextNode | ElementNode) => boolean
+  isSelected: (state: EditorState) => boolean
+}
+
+const isMarkSelected = (state: EditorState, format: number): boolean => {
+  const selection = state.selection
+  if (!selection) return false
+
+  if (selection.type === 'caret') {
+    if (selection.storedFormat != null) {
+      return hasFormat(selection.storedFormat, format)
+    }
+  }
+
+  return false
 }
 
 export const getToolbarButtons = (): ToolbarButton[] => [
@@ -30,38 +48,35 @@ export const getToolbarButtons = (): ToolbarButton[] => [
   {
     key: 'bold',
     icon: <MdFormatBold />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && hasFormat(node.format, Format.BOLD),
+    isSelected: (state: EditorState) => isMarkSelected(state, Format.BOLD),
   },
   {
     key: 'italic',
     icon: <MdFormatItalic />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && hasFormat(node.format, Format.ITALIC),
+    isSelected: (state: EditorState) => isMarkSelected(state, Format.ITALIC),
   },
   {
     key: 'underline',
     icon: <MdFormatUnderlined />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isTextNode(node) && hasFormat(node.format, Format.UNDERLINE),
+    isSelected: (state: EditorState) => isMarkSelected(state, Format.UNDERLINE),
   },
-  // Blocks
-  {
-    key: 'paragraph',
-    icon: <BiSolidParking />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isElementNode(node) && node.type === 'paragraph',
-  },
-  {
-    key: 'h1',
-    icon: <LuHeading1 />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isElementNode(node) && node.type === 'heading' && node.level === 1,
-  },
-  {
-    key: 'h2',
-    icon: <LuHeading2 />,
-    isSelected: (node: TextNode | ElementNode) =>
-      isElementNode(node) && node.type === 'heading' && node.level === 2,
-  },
+  // // Blocks
+  // {
+  //   key: 'paragraph',
+  //   icon: <BiSolidParking />,
+  //   isSelected: (state: EditorState) =>
+  //     isElementNode(node) && node.type === 'paragraph',
+  // },
+  // {
+  //   key: 'h1',
+  //   icon: <LuHeading1 />,
+  //   isSelected: (state: EditorState) =>
+  //     isElementNode(node) && node.type === 'heading' && node.level === 1,
+  // },
+  // {
+  //   key: 'h2',
+  //   icon: <LuHeading2 />,
+  //   isSelected: (state: EditorState) =>
+  //     isElementNode(node) && node.type === 'heading' && node.level === 2,
+  // },
 ]

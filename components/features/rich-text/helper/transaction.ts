@@ -57,19 +57,29 @@ const replaceInSingleParent = (
   replacementText: string,
   state: EditorState
 ) => {
+  const storedFormat = state.selection?.storedFormat
+
   const { start, end, commonAncestor } = range
 
-  const { updatedStartNode, updatedEndNode, nextOffset } =
-    createReplacementBoundaryNodes(start, end, replacementText)
+  const { updatedStartNode, newMiddleNode, updatedEndNode, nextOffset } =
+    createReplacementBoundaryNodes({
+      start,
+      end,
+      replacementText,
+      storedFormat,
+    })
 
   const nextChildren = [
     ...commonAncestor.children.slice(0, start.index + 1),
+    ...(newMiddleNode ? [newMiddleNode.key] : []),
     updatedEndNode.key,
     ...commonAncestor.children.slice(end.index + 1),
   ]
 
+  const targetNode = newMiddleNode ?? updatedStartNode
+
   const nextSelection: EditorSelection = createCaretSelection(
-    updatedStartNode,
+    targetNode,
     nextOffset
   )
 
@@ -80,6 +90,8 @@ const replaceInSingleParent = (
     ...commonAncestor,
     children: nextChildren,
   })
+
+  if (newMiddleNode) nextNodeMap.set(newMiddleNode.key, newMiddleNode)
 
   const removedKeys = commonAncestor.children.slice(
     start.index + 1,
@@ -92,7 +104,7 @@ const replaceInSingleParent = (
   const nextState = {
     ...state,
     nodeMap: nextNodeMap,
-    selection: nextSelection,
+    selection: { ...nextSelection, storedFormat: null },
   }
 
   const normalizedState = normalizeDocument(nextState)
@@ -119,12 +131,12 @@ const replaceInSiblingBlocks = (
     return null
 
   const { updatedStartNode, updatedEndNode, nextOffset } =
-    createReplacementBoundaryNodes(
+    createReplacementBoundaryNodes({
       start,
       end,
       replacementText,
-      startParentNode.key
-    )
+      endParentKey: endParentNode.key,
+    })
 
   const startNodeIndex = commonAncestor.children.indexOf(startParentNodeKey)
   const endNodeIndex = commonAncestor.children.indexOf(endParentNodeKey)
@@ -533,7 +545,39 @@ const toggleMarkInSiblingBlocks = (
   return nextState
 }
 
+const getActiveMark = (
+  selection: EditorSelection,
+  nodeMap: EditorNodeMap
+): number => {
+  if (selection.storedFormat != null) return selection.storedFormat
+
+  const selectedAnchorNode = selection.anchorNode
+  if (!selectedAnchorNode) return 0
+
+  const anchorNode = nodeMap.get(selectedAnchorNode.key)
+  if (!anchorNode || !isTextNode(anchorNode)) return 0
+
+  return anchorNode.format
+}
+
 const toggleMark = (state: EditorState, format: number): EditorState | null => {
+  // In case of collpased caret should update the stored format
+  const selection = state.selection
+  if (selection?.type === 'caret') {
+    const nodeMap = state.nodeMap
+    const activeFormat = getActiveMark(selection, nodeMap)
+
+    const nextStoredMark = toggleFormat(activeFormat, format)
+
+    return {
+      ...state,
+      selection: {
+        ...selection,
+        storedFormat: nextStoredMark,
+      },
+    }
+  }
+
   const crossBlockTextRange = resolveTreeTextRange(state)
   let nextEditorState: EditorState | null = null
   if (!crossBlockTextRange) return null
