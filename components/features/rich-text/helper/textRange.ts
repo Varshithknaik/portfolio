@@ -27,7 +27,8 @@ export type TreeTextRange = {
 export type ReplacementPolicy = 'same-parent' | 'sibling-block-merge'
 export type MarkPolicy = 'same-block' | 'sibling-blocks'
 
-const maxDepth = 32
+const MAX_DEPTH = 32
+
 const resolveTextNode = (
   nodeMap: EditorNodeMap,
   point: SelectionPoint | null
@@ -61,7 +62,7 @@ const getPathToRoot = (
   let currentKey: NodeKey | undefined = leaf
   let depth = 0
 
-  while (currentKey && depth++ < maxDepth) {
+  while (currentKey && depth++ < MAX_DEPTH) {
     path.push(currentKey)
     const node: EditorNode | undefined = nodeMap.get(currentKey)
     if (!node) return null

@@ -10,9 +10,11 @@ import {
   EditorSelection,
   EditorState,
   ElementNode,
+  NodeKey,
   TextNode,
 } from '../type/schema'
 import { Format, hasFormat, isElementNode, isTextNode } from './nodeUtils'
+import { getPointParentKey, resolveTreeTextRange } from './textRange'
 
 export type MarkKey = 'bold' | 'italic' | 'underline'
 
@@ -28,6 +30,59 @@ export type ToolbarButton = {
   key: ToolbarKey
   icon: ReactNode
   isSelected: (state: EditorState) => boolean
+}
+
+const getSelectedTextNodes = (state: EditorState): TextNode[] => {
+  const selection = state.selection
+
+  if (!selection || selection.type === 'caret') return []
+
+  const range = resolveTreeTextRange(state)
+
+  if (!range) return []
+
+  const startParentNodeKey: NodeKey = getPointParentKey(range, range.startPath)
+  const endParentNodeKey: NodeKey = getPointParentKey(range, range.endPath)
+  const commonAncestor = range.commonAncestor
+
+  const startParent = state.nodeMap.get(startParentNodeKey)
+  const endParent = state.nodeMap.get(endParentNodeKey)
+
+  let keys: NodeKey[]
+
+  if (
+    !startParent ||
+    !isElementNode(startParent) ||
+    !endParent ||
+    !isElementNode(endParent)
+  )
+    return []
+
+  // Same block
+  if (startParentNodeKey === endParentNodeKey) {
+    keys = startParent.children.slice(range.start.index, range.end.index + 1)
+  } else {
+    const startBlockIndex = commonAncestor.children.indexOf(startParentNodeKey)
+    const endBlockIndex = commonAncestor.children.indexOf(endParentNodeKey)
+
+    if (startBlockIndex < 0 || endBlockIndex <= startBlockIndex) return []
+
+    keys = [...startParent.children.slice(range.start.index)]
+
+    for (const blockKeys of commonAncestor.children.slice(
+      startBlockIndex + 1,
+      endBlockIndex
+    )) {
+      const block = state.nodeMap.get(blockKeys)
+
+      if (!block || !isElementNode(block)) return []
+
+      keys.push(...block.children)
+    }
+
+    keys.push(...endParent.children.slice(0, range.end.index + 1))
+  }
+  return keys.map((nodeKey) => state.nodeMap.get(nodeKey)).filter(isTextNode)
 }
 
 const isMarkSelected = (state: EditorState, format: number): boolean => {
@@ -48,7 +103,12 @@ const isMarkSelected = (state: EditorState, format: number): boolean => {
     return hasFormat(node.format, format)
   }
 
-  return false
+  const selectedTextNodes: TextNode[] = getSelectedTextNodes(state)
+
+  return (
+    selectedTextNodes.length > 0 &&
+    selectedTextNodes.every((node) => hasFormat(node.format, format))
+  )
 }
 
 export const getToolbarButtons = (): ToolbarButton[] => [
